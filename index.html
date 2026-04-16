@@ -745,10 +745,17 @@
               </div>
               <div class="form-group field-user">
                 <label>Prix mati&egrave;re premi&egrave;re (achat fournisseur)</label>
-                <div class="input-wrap">
-                  <input type="number" id="rawPrice" value="0.10" min="0" step="0.01" oninput="recalc()">
-                  <span class="unit-label">&euro;/kg</span>
+                <div style="display:flex;gap:.4rem;align-items:center">
+                  <div class="input-wrap" style="flex:1">
+                    <input type="number" id="rawPrice" value="0.10" min="0" step="0.01" oninput="recalc()">
+                    <span class="unit-label">/kg</span>
+                  </div>
+                  <select id="rawCurrency" onchange="recalc()" style="width:80px;padding:.5rem .4rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.85rem;font-family:inherit">
+                    <option value="EUR">&euro; EUR</option>
+                    <option value="USD">$ USD</option>
+                  </select>
                 </div>
+                <span class="hint">Taux EUR/USD : <input type="number" id="eurUsdRate" value="1.08" min="0.5" max="2" step="0.01" style="width:55px;padding:.15rem .3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.75rem;text-align:center" oninput="recalc()"> (modifiable)</span>
               </div>
               <div class="form-group field-auto-edit">
                 <label>Big bags empilables</label>
@@ -2017,7 +2024,11 @@
       document.getElementById('t2Capacity').value = cap;
     }
 
-    const RM = v('rawPrice'), Wimp = v('importTax'), analysis = v('analyses');
+    // Convert raw price to EUR if in USD
+    const rawCcy = document.getElementById('rawCurrency').value;
+    const eurUsd = parseFloat(document.getElementById('eurUsdRate').value) || 1.08;
+    const RM = rawCcy === 'USD' ? v('rawPrice') / eurUsd : v('rawPrice');
+    const Wimp = v('importTax'), analysis = v('analyses');
     const manuf = v('manufacturing'), yieldPct = v('processYield') / 100;
     const storage = v('storage'), Wexp = v('exportTax'), ins = v('insurance');
     const marketPrice = v('marketPrice'), targetMarginPct = v('targetMargin') / 100;
