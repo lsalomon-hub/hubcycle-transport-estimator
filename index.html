@@ -755,7 +755,7 @@
                     <option value="USD">$ USD</option>
                   </select>
                 </div>
-                <span class="hint">Taux EUR/USD : <input type="number" id="eurUsdRate" value="1.08" min="0.5" max="2" step="0.01" style="width:55px;padding:.15rem .3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.75rem;text-align:center" oninput="recalc()"> (modifiable)</span>
+                <span class="hint">Taux EUR/USD : <input type="number" id="eurUsdRate" value="1.08" min="0.5" max="2" step="0.01" style="width:55px;padding:.15rem .3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.75rem;text-align:center" oninput="recalc()"> <span id="eurUsdStatus" style="color:var(--text-dim)">(chargement...)</span></span>
               </div>
               <div class="form-group field-auto-edit">
                 <label>Big bags empilables</label>
@@ -2116,6 +2116,19 @@
   }
 
   initDataLists();
+
+  // Auto-fetch EUR/USD rate on load
+  fetch('https://open.er-api.com/v6/latest/EUR')
+    .then(r => r.json())
+    .then(data => {
+      if (data.rates && data.rates.USD) {
+        document.getElementById('eurUsdRate').value = data.rates.USD.toFixed(2);
+        document.getElementById('eurUsdStatus').textContent = '(live \u2705)';
+        document.getElementById('eurUsdStatus').style.color = '#4ade80';
+        recalc();
+      }
+    })
+    .catch(() => { /* fallback 1.08 already set */ });
 
   // ═══════════════════════════════════════════════
   // FIELD COLOR CODING — apply CSS classes by field type
