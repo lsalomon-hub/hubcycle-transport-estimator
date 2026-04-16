@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hubcycle — Transport Cost Estimator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-card: #18181b;
+      --bg-card-hover: #1f1f23;
+      --bg-input: #27272a;
+      --bg-sidebar: #111113;
+      --border: #27272a;
+      --border-light: #3f3f46;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --green-500: #22c55e;
+      --green-400: #4ade80;
+      --green-900: #14532d;
+      --green-950: #052e16;
+      --amber-400: #fbbf24;
+      --amber-500: #f59e0b;
+      --red-400: #f87171;
+      --red-500: #ef4444;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --purple-400: #c084fc;
+      --pink-400: #f472b6;
+      --accent: #22c55e;
+      --accent-dim: rgba(34,197,94,.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Sidebar ─── */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      overflow-y: auto;
+    }
+    .sidebar-header {
+      padding: 1.25rem 1.25rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .sidebar-logo .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sidebar-logo .logo-icon svg { width: 18px; height: 18px; }
+    .sidebar-logo span {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .sidebar-nav { padding: .75rem; flex: 1; }
+    .nav-section {
+      margin-bottom: 1.25rem;
+    }
+    .nav-section-title {
+      font-size: .65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+      padding: .4rem .75rem;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .55rem .75rem;
+      border-radius: var(--radius-sm);
+      font-size: .85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--bg-card); color: var(--text); }
+    .nav-item.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    .nav-item .nav-icon {
+      width: 18px; height: 18px;
+      opacity: .7;
+      flex-shrink: 0;
+    }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: .75rem;
+      color: var(--text-dim);
+    }
+
+    /* ─── Main content ─── */
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(9,9,11,.85);
+      backdrop-filter: blur(12px);
+      z-index: 40;
+    }
+    .topbar h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .topbar-actions { display: flex; gap: .5rem; }
+    .btn {
+      padding: .45rem .85rem;
+      border-radius: var(--radius-sm);
+      font-size: .8rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      border: none;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .btn-ghost:hover { background: var(--bg-card); color: var(--text); border-color: var(--border-light); }
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+    .btn-primary:hover { background: var(--green-400); }
+
+    /* Content area */
+    .content {
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .content { grid-template-columns: 1fr; }
+      .results-col { position: static !important; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .content { padding: 1rem; }
+      .form-grid { grid-template-columns: 1fr !important; }
+    }
+
+    /* ─── Cards ─── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+    .card-header {
+      padding: .75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .card-header h3 {
+      font-size: .85rem;
+      font-weight: 600;
+      flex: 1;
+    }
+    .card-header .badge {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      font-variant-numeric: tabular-nums;
+    }
+    .card-body { padding: 1.25rem; }
+
+    /* ─── Form ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .85rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .3rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap input, .input-wrap select,
+    .form-group > input, .form-group > select {
+      width: 100%;
+      padding: .5rem .75rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: .85rem;
+      font-family: inherit;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input-wrap input:focus, .input-wrap select:focus,
+    .form-group > input:focus, .form-group > select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34,197,94,.15);
+    }
+    .form-group > select, .input-wrap select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      padding-right: 2rem;
+    }
+    .input-wrap .unit-label {
+      position: absolute;
+      right: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: .7rem;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .input-wrap input { padding-right: 3rem; }
+    input[readonly] {
+      opacity: .5;
+      cursor: default;
+    }
+    .hint {
+      font-size: .65rem;
+      color: var(--text-dim);
+    }
+
+    /* ── FIELD TYPE COLOR CODING ── */
+    /* 1. User input (to fill) — left green border */
+    .field-user input, .field-user select {
+      border-left: 3px solid var(--green-500) !important;
+    }
+    /* 2. Auto + editable — left amber border + subtle amber bg */
+    .field-auto-edit input, .field-auto-edit select {
+      border-left: 3px solid var(--amber-500) !important;
+      background: rgba(245,158,11,.06) !important;
+    }
+    /* 3. Auto readonly (result) — left dim border + locked bg */
+    .field-auto-lock input {
+      border-left: 3px solid var(--border-light) !important;
+      background: rgba(113,113,122,.08) !important;
+      opacity: .7;
+      cursor: default;
+    }
+
+    /* Legend bar */
+    .field-legend {
+      display: flex;
+      gap: 1.25rem;
+      padding: .6rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .field-legend .legend-item {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .72rem;
+      color: var(--text-muted);
+    }
+    .field-legend .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1.5px solid var(--border);
+    }
+
+    /* Transport result row */
+    .transport-result {
+      margin-top: .85rem;
+      padding: .6rem 1rem;
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--border);
+    }
+    .transport-result .label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .transport-result .value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .capacity-info {
+      margin-top: .5rem;
+      font-size: .7rem;
+      color: var(--text-dim);
+      padding: .35rem .75rem;
+      background: var(--bg-input);
+      border-radius: 6px;
+    }
+
+    /* ─── Results sidebar ─── */
+    .results-col { position: sticky; top: 80px; }
+    .result-card {
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .result-header {
+      background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(34,197,94,.05));
+      padding: .85rem 1.25rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(34,197,94,.2);
+    }
+    .result-header h2 {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .result-header p {
+      font-size: .7rem;
+      color: var(--text-dim);
+    }
+    .result-body { padding: 1rem 1.25rem; }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .45rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-row .rlabel {
+      font-size: .78rem;
+      color: var(--text-muted);
+    }
+    .result-row .rvalue {
+      font-size: .85rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .result-big {
+      text-align: center;
+      padding: 1rem 0;
+      margin: .6rem 0;
+      background: rgba(34,197,94,.08);
+      border: 1px solid rgba(34,197,94,.15);
+      border-radius: var(--radius-sm);
+    }
+    .result-big .rlabel {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .result-big .rvalue {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .result-big .runit {
+      font-size: .75rem;
+      color: var(--text-dim);
+    }
+    .sep { border-top: 1px solid var(--border); margin: .4rem 0; }
+
+    /* Verdict */
+    .verdict-box {
+      margin: .75rem 0 .25rem;
+      padding: .65rem 1rem;
+      border-radius: var(--radius-sm);
+      text-align: center;
+      font-weight: 800;
+      font-size: .95rem;
+      letter-spacing: .03em;
+    }
+    .verdict-go {
+      background: rgba(34,197,94,.12);
+      color: var(--green-400);
+      border: 1px solid rgba(34,197,94,.3);
+    }
+    .verdict-review {
+      background: rgba(251,191,36,.1);
+      color: var(--amber-400);
+      border: 1px solid rgba(251,191,36,.25);
+    }
+    .verdict-nogo {
+      background: rgba(239,68,68,.1);
+      color: var(--red-400);
+      border: 1px solid rgba(239,68,68,.25);
+    }
+
+    /* Quotation card */
+    .quotation-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 1.25rem;
+      overflow: hidden;
+    }
+    .qheader {
+      padding: .7rem 1.25rem;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .qbody { padding: .85rem 1.25rem; }
+    .q-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .35rem 0;
+      font-size: .78rem;
+    }
+    .q-row .q-label { color: var(--text-muted); }
+    .q-row .q-col { font-weight: 600; color: var(--text-dim); font-size: .65rem; }
+    .q-row .q-value { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* Formula card */
+    .formula-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+    }
+    .formula-card .ftitle {
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .4rem;
+    }
+    .formula-card code {
+      font-size: .7rem;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      line-height: 1.6;
+    }
+
+    /* Section highlight boxes */
+    .section-box {
+      padding: .6rem .85rem;
+      border-radius: var(--radius-sm);
+      margin: .5rem 0;
+    }
+    .section-box .stitle {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .4rem;
+    }
+    .section-transport {
+      background: rgba(59,130,246,.08);
+      border: 1px solid rgba(59,130,246,.2);
+    }
+    .section-transport .stitle { color: var(--blue-400); }
+    .section-costs {
+      background: rgba(168,85,247,.08);
+      border: 1px solid rgba(168,85,247,.2);
+    }
+    .section-costs .stitle { color: var(--purple-400); }
+    .section-total {
+      background: rgba(34,197,94,.08);
+      border: 1px solid rgba(34,197,94,.25);
+    }
+    .section-total .stitle { color: var(--green-400); }
+    .section-sell {
+      background: rgba(251,191,36,.08);
+      border: 1px solid rgba(251,191,36,.2);
+    }
+    .section-sell .stitle { color: var(--amber-400); }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .4rem .5rem;
+      margin-top: .3rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .9rem;
+    }
+    .total-transport {
+      background: rgba(59,130,246,.12);
+      color: var(--blue-400);
+    }
+    .total-costs {
+      background: rgba(168,85,247,.12);
+      color: var(--purple-400);
+    }
+
+    /* Sell price cards */
+    .sell-card {
+      padding: .6rem .75rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: .5rem;
+    }
+    .sell-card .sell-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: .2rem;
+    }
+    .sell-card .sell-price {
+      font-size: 1.1rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .sell-card .sell-tag {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .sell-card .sell-margin {
+      font-size: .8rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .sell-20 {
+      background: rgba(251,191,36,.1);
+      border: 1px solid rgba(251,191,36,.25);
+    }
+    .sell-20 .sell-price, .sell-20 .sell-tag { color: var(--amber-400); }
+    .sell-30 {
+      background: rgba(34,197,94,.1);
+      border: 1px solid rgba(34,197,94,.25);
+    }
+    .sell-30 .sell-price, .sell-30 .sell-tag { color: var(--green-400); }
+
+    /* Process steps */
+    .process-step {
+      padding: .4rem .5rem;
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-bottom: .4rem;
+    }
+    .process-step .form-grid { margin-bottom: 0 !important; }
+    @media (max-width: 768px) {
+      .process-step .form-grid { grid-template-columns: 1fr 1fr !important; }
+    }
+
+    /* Auto-fill indicator */
+    .auto-tag {
+      display: inline-block;
+      font-size: .6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      padding: .1rem .4rem;
+      border-radius: 4px;
+      background: rgba(34,197,94,.12);
+      color: var(--green-400);
+      border: 1px solid rgba(34,197,94,.2);
+      margin-left: .4rem;
+      vertical-align: middle;
+    }
+
+    /* Colors for values */
+    .c-green { color: var(--green-400) !important; }
+    .c-amber { color: var(--amber-400) !important; }
+    .c-red { color: var(--red-400) !important; }
+    .c-blue { color: var(--blue-400) !important; }
+    .c-purple { color: var(--purple-400) !important; }
+    .c-pink { color: var(--pink-400) !important; }
+
+    /* Print */
+    @media print {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .topbar { position: static; background: white; color: black; backdrop-filter: none; }
+      body { background: white; color: black; }
+      .card, .result-card, .quotation-card { border-color: #ddd; background: white; }
+      .form-group input, .form-group select { background: #f5f5f5; border-color: #ddd; color: black; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <span>Hubcycle</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Outils</div>
+        <a class="nav-item active" href="#">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4a2 2 0 012 2v6a2 2 0 01-2 2H6"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+          Transport Estimator
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      Hubcycle &copy; 2026
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Transport Cost Estimator</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="resetForm()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.68-9.2L1 10"/></svg>
+          Reset
+        </button>
+        <button class="btn btn-ghost" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimer
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="forms-col">
+
+        <!-- LEGEND BAR -->
+        <div class="field-legend">
+          <div class="legend-item">
+            <div class="legend-swatch" style="border-left:3px solid var(--green-500);background:var(--bg-input)"></div>
+            <span>&Agrave; remplir</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="border-left:3px solid var(--amber-500);background:rgba(245,158,11,.06)"></div>
+            <span>Auto &mdash; modifiable</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="border-left:3px solid var(--border-light);background:rgba(113,113,122,.08)"></div>
+            <span>Auto &mdash; calcul&eacute;</span>
+          </div>
+        </div>
+
+        <!-- PRODUCT -->
+        <div class="card">
+          <div class="card-header">
+            <div class="dot" style="background:var(--green-500)"></div>
+            <h3>Produit</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group field-user">
+                <label>Nom du produit</label>
+                <input type="text" id="productName" list="productList" placeholder="Tapez pour chercher..." oninput="onProductChange()">
+                <datalist id="productList"></datalist>
+                <span class="hint" id="productHint"></span>
+              </div>
+              <div class="form-group field-auto-edit">
+                <label>Etat</label>
+                <select id="productState" onchange="recalc()">
+                  <option value="Dry">Dry</option>
+                  <option value="Liquid">Liquid</option>
+                  <option value="Frozen">Frozen</option>
+                  <option value="Fresh">Fresh</option>
+                  <option value="Paste">Paste</option>
+                </select>
+              </div>
+              <div class="form-group field-auto-edit">
+                <label>Densit&eacute; brute (mati&egrave;re premi&egrave;re)</label>
+                <div class="input-wrap">
+                  <input type="number" id="bulkDensity" value="140" min="1" step="1" oninput="recalc()">
+                  <span class="unit-label">kg/m&sup3;</span>
+                </div>
+                <span class="hint">Utilis&eacute;e pour le Transport 1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT 1 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="dot" style="background:var(--blue-500)"></div>
+            <h3>Transport 1 &mdash; Fournisseur &rarr; CM / Entrep&ocirc;t</h3>
+            <span class="badge c-blue" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25)" id="t1Badge">0,000 &euro;/kg</span>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Pays d'origine</label>
+                <input type="text" id="t1Origin" list="countryList" value="India" oninput="onRouteChange('t1')" onchange="onRouteChange('t1')">
+              </div>
+              <div class="form-group">
+                <label>Pays de destination</label>
+                <input type="text" id="t1Dest" list="countryList" value="France" oninput="onRouteChange('t1')" onchange="onRouteChange('t1')">
+              </div>
+              <div class="form-group">
+                <label>Mode de transport</label>
+                <select id="t1Mode" onchange="recalc()">
+                  <option value="Sea">Maritime (Sea)</option>
+                  <option value="Road">Routier (Road)</option>
+                  <option value="Air">A&eacute;rien (Air)</option>
+                  <option value="Rail">Ferroviaire (Rail)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Distance</label>
+                <div class="input-wrap">
+                  <input type="number" id="t1Distance" value="8500" min="0" step="100" oninput="recalc()">
+                  <span class="unit-label">km</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Co&ucirc;t fret estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t1Cost" value="2150" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">&euro;</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Transit estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t1Transit" value="38" min="0" step="1">
+                  <span class="unit-label">jours</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Poids estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t1Weight" value="3640" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">kg</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Volume connu (optionnel)</label>
+                <div class="input-wrap">
+                  <input type="number" id="t1Volume" min="0" step="10" placeholder="Vide = camion complet" oninput="recalc()">
+                  <span class="unit-label">kg</span>
+                </div>
+              </div>
+            </div>
+            <div class="transport-result">
+              <span class="label">Transport 1 / kg</span>
+              <span class="value c-blue" id="t1PerKg">0,000 &euro;</span>
+            </div>
+            <div class="capacity-info" id="t1CapInfo">40' container &mdash; 26 big bags &times; 140 kg/bb = 3 640 kg (densit&eacute; brute)</div>
+          </div>
+        </div>
+
+        <!-- MANUFACTURING / PROCESS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="dot" style="background:var(--purple-400)"></div>
+            <h3>Manufacturing &mdash; Transformation au CM</h3>
+            <button class="btn btn-ghost" style="margin-left:auto;font-size:.7rem;padding:.3rem .6rem" onclick="addProcessStep()">+ &Eacute;tape</button>
+          </div>
+          <div class="card-body">
+            <!-- Process steps (dynamic) -->
+            <div id="processSteps">
+              <div class="process-step" data-step="0">
+                <div class="form-grid" style="grid-template-columns:1fr 100px 100px auto;gap:.5rem;align-items:end;margin-bottom:.5rem">
+                  <div class="form-group">
+                    <label>&Eacute;tape 1</label>
+                    <select class="step-type" onchange="onStepTypeChange(this)">
+                      <option value="">-- Aucun --</option>
+                      <option value="Heat treatment">Heat treatment (98%)</option>
+                      <option value="Grinding (non-fibrous)">Grinding / non-fibrous (95%)</option>
+                      <option value="Grinding (fibrous / sieving)">Grinding / fibrous + sieving (87%)</option>
+                      <option value="Drying">Drying (70%)</option>
+                      <option value="Freeze-drying">Freeze-drying (70%)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Rendement</label>
+                    <div class="input-wrap">
+                      <input type="number" class="step-yield" value="95" min="1" max="100" step="1" oninput="recalcProcess()">
+                      <span class="unit-label">%</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Co&ucirc;t</label>
+                    <div class="input-wrap">
+                      <input type="number" class="step-cost" value="0" min="0" step="0.01" oninput="recalcProcess()">
+                      <span class="unit-label">&euro;/kg</span>
+                    </div>
+                  </div>
+                  <div style="padding-bottom:.3rem">
+                    <button class="btn btn-ghost" style="font-size:.7rem;padding:.3rem .5rem;color:var(--red-400)" onclick="removeProcessStep(this)" title="Supprimer">&times;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:.75rem;padding:.5rem .75rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border);display:flex;justify-content:space-between;font-size:.8rem">
+              <span style="color:var(--text-muted)">Rendement cumul&eacute;</span>
+              <span style="font-weight:700;color:var(--purple-400)" id="totalYieldDisplay">95%</span>
+            </div>
+            <div style="margin-top:.3rem;padding:.5rem .75rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border);display:flex;justify-content:space-between;font-size:.8rem">
+              <span style="color:var(--text-muted)">Co&ucirc;t manufacturing total</span>
+              <span style="font-weight:700;color:var(--purple-400)" id="totalManufDisplay">0,00 &euro;/kg</span>
+            </div>
+
+            <div class="sep" style="margin:.75rem 0"></div>
+
+            <!-- Output product -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Produit de sortie (apr&egrave;s process)</label>
+                <input type="text" id="outputProduct" list="productList" placeholder="ex. Black pepper powder" oninput="onOutputProductChange()">
+                <span class="hint" id="outputHint">Le prix march&eacute; sera compar&eacute; &agrave; ce produit</span>
+              </div>
+              <div class="form-group">
+                <label>Densit&eacute; apr&egrave;s process</label>
+                <div class="input-wrap">
+                  <input type="number" id="processedDensity" value="140" min="1" step="1" oninput="recalc()">
+                  <span class="unit-label">kg/m&sup3;</span>
+                </div>
+                <span class="hint">Utilis&eacute;e pour T2 &amp; T3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT 2 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="dot" style="background:var(--amber-500)"></div>
+            <h3>Transport 2 &mdash; CM &rarr; Entrep&ocirc;t Hubcycle</h3>
+            <span class="badge c-amber" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25)" id="t2Badge">0,000 &euro;/kg</span>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Pays d'origine</label>
+                <input type="text" id="t2Origin" list="countryList" value="France" oninput="onRouteChange('t2')" onchange="onRouteChange('t2')">
+              </div>
+              <div class="form-group">
+                <label>Pays de destination</label>
+                <input type="text" id="t2Dest" list="countryList" value="France" oninput="onRouteChange('t2')" onchange="onRouteChange('t2')">
+              </div>
+              <div class="form-group">
+                <label>Mode de transport</label>
+                <select id="t2Mode" onchange="recalc()">
+                  <option value="Road" selected>Routier (Road)</option>
+                  <option value="Sea">Maritime (Sea)</option>
+                  <option value="Air">A&eacute;rien (Air)</option>
+                  <option value="Rail">Ferroviaire (Rail)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Distance</label>
+                <div class="input-wrap">
+                  <input type="number" id="t2Distance" value="300" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">km</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Co&ucirc;t fret estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t2Cost" value="540" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">&euro;</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Transit estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t2Transit" value="2" min="0" step="1">
+                  <span class="unit-label">jours</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Poids transport&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t2Weight" value="4200" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">kg</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Capacit&eacute; densit&eacute; process&eacute;e</label>
+                <div class="input-wrap">
+                  <input type="number" id="t2Capacity" value="3094" readonly>
+                  <span class="unit-label">kg</span>
+                </div>
+              </div>
+            </div>
+            <div class="transport-result">
+              <span class="label">Transport 2 / kg</span>
+              <span class="value c-amber" id="t2PerKg">0,000 &euro;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT 3 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="dot" style="background:var(--pink-400)"></div>
+            <h3>Transport 3 &mdash; Entrep&ocirc;t &rarr; Client</h3>
+            <span class="badge c-pink" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.25)" id="t3Badge">0,000 &euro;/kg</span>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Pays du client</label>
+                <input type="text" id="t3Dest" list="countryList" value="Germany" oninput="onRouteChange('t3')" onchange="onRouteChange('t3')">
+              </div>
+              <div class="form-group">
+                <label>Nom du client</label>
+                <input type="text" id="t3Client" placeholder="Nom du client">
+              </div>
+              <div class="form-group">
+                <label>Mode de transport</label>
+                <select id="t3Mode" onchange="recalc()">
+                  <option value="Road" selected>Routier (Road)</option>
+                  <option value="Sea">Maritime (Sea)</option>
+                  <option value="Air">A&eacute;rien (Air)</option>
+                  <option value="Rail">Ferroviaire (Rail)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Distance</label>
+                <div class="input-wrap">
+                  <input type="number" id="t3Distance" value="1100" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">km</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Co&ucirc;t fret estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t3Cost" value="1705" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">&euro;</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Transit estim&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t3Transit" value="2" min="0" step="1">
+                  <span class="unit-label">jours</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Poids transport&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="t3Weight" value="4200" min="0" step="10" oninput="recalc()">
+                  <span class="unit-label">kg</span>
+                </div>
+              </div>
+            </div>
+            <div class="transport-result">
+              <span class="label">Transport 3 / kg</span>
+              <span class="value c-pink" id="t3PerKg">0,000 &euro;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OTHER COSTS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="dot" style="background:var(--purple-400)"></div>
+            <h3>Co&ucirc;ts &amp; Objectifs</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Mati&egrave;re premi&egrave;re</label>
+                <div class="input-wrap">
+                  <input type="number" id="rawPrice" value="0.10" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&euro;/kg</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Analyses</label>
+                <div class="input-wrap">
+                  <input type="number" id="analyses" value="0.03" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&euro;/kg</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Stockage</label>
+                <div class="input-wrap">
+                  <input type="number" id="storage" value="0.00" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&euro;/kg</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Taxes import</label>
+                <div class="input-wrap">
+                  <input type="number" id="importTax" value="1.00" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&times;</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Taxes export</label>
+                <div class="input-wrap">
+                  <input type="number" id="exportTax" value="1.00" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&times;</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Assurance</label>
+                <div class="input-wrap">
+                  <input type="number" id="insurance" value="1.00" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&times;</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Marge brute cible</label>
+                <div class="input-wrap">
+                  <input type="number" id="targetMargin" value="35" min="0" max="100" step="1" oninput="recalc()">
+                  <span class="unit-label">%</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Prix march&eacute;</label>
+                <div class="input-wrap">
+                  <input type="number" id="marketPrice" value="0.55" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&euro;/kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ RESULTS COLUMN ═══ -->
+      <div class="results-col">
+        <div class="result-card">
+          <div class="result-header">
+            <h2>R&eacute;sultats</h2>
+            <p>Calcul automatique en temps r&eacute;el</p>
+          </div>
+          <div class="result-body">
+
+            <!-- ── TRANSPORT ── -->
+            <div class="section-box section-transport">
+              <div class="stitle">Transport</div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">T1 Fournisseur &rarr; CM</span>
+                <span class="rvalue c-blue" id="rT1">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">T2 CM &rarr; Entrep&ocirc;t</span>
+                <span class="rvalue c-amber" id="rT2">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">T3 Entrep&ocirc;t &rarr; Client</span>
+                <span class="rvalue c-pink" id="rT3">&mdash;</span>
+              </div>
+              <div class="total-row total-transport">
+                <span>Total transport / kg</span>
+                <span id="rTotalTransport">&mdash;</span>
+              </div>
+            </div>
+
+            <!-- ── AUTRES COUTS ── -->
+            <div class="section-box section-costs">
+              <div class="stitle">Autres co&ucirc;ts / kg</div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">Mati&egrave;re premi&egrave;re (&times; W<sub>imp</sub>)</span>
+                <span class="rvalue" id="rRM">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">Analyses</span>
+                <span class="rvalue" id="rAnalyses">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">Fabrication</span>
+                <span class="rvalue" id="rManuf">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">Rendement (1/Yield)</span>
+                <span class="rvalue" id="rYield">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">Stockage</span>
+                <span class="rvalue" id="rStorage">&mdash;</span>
+              </div>
+              <div class="result-row" style="border:none;padding:.2rem 0">
+                <span class="rlabel">Taxes &amp; Assurance</span>
+                <span class="rvalue" id="rTaxIns">&mdash;</span>
+              </div>
+            </div>
+
+            <!-- ── PRIX DE REVIENT ── -->
+            <div class="section-box section-total">
+              <div class="stitle">Prix de revient</div>
+              <div class="result-big" style="margin:0;background:transparent;border:none;padding:.5rem 0">
+                <div class="rvalue" id="rCostPrice" style="font-size:2rem">&mdash;</div>
+                <div class="runit">EUR / kg</div>
+              </div>
+            </div>
+
+            <!-- ── PRIX DE VENTE PROPOSES ── -->
+            <div class="section-box section-sell">
+              <div class="stitle">Prix de vente propos&eacute;s vs march&eacute; (<span id="rMarketPriceInline">&mdash;</span> &euro;/kg)</div>
+
+              <div class="sell-card sell-20">
+                <div class="sell-header">
+                  <span class="sell-tag">-20% march&eacute;</span>
+                  <span class="sell-price" id="rTarget20">&mdash;</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="sell-margin" style="color:var(--text-muted)">Marge</span>
+                  <span class="sell-margin" id="rMargin20">&mdash;</span>
+                </div>
+              </div>
+
+              <div class="sell-card sell-30">
+                <div class="sell-header">
+                  <span class="sell-tag">-30% march&eacute;</span>
+                  <span class="sell-price" id="rTarget30">&mdash;</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="sell-margin" style="color:var(--text-muted)">Marge</span>
+                  <span class="sell-margin" id="rMargin30">&mdash;</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── VERDICT ── -->
+            <div class="result-row">
+              <span class="rlabel">Co&ucirc;t vs march&eacute;</span>
+              <span class="rvalue" id="rCostVsMarket">&mdash;</span>
+            </div>
+            <div class="verdict-box" id="verdictBox">&mdash;</div>
+
+          </div>
+        </div>
+
+        <!-- QUOTATION EXPORT -->
+        <div class="quotation-card">
+          <div class="qheader">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6"/></svg>
+            Valeurs pour le devis
+          </div>
+          <div class="qbody">
+            <div class="q-row">
+              <span class="q-label">Transport 1 &euro;/kg</span>
+              <span class="q-col">Col. U</span>
+              <span class="q-value" id="qT1">&mdash;</span>
+            </div>
+            <div class="q-row">
+              <span class="q-label">Transport 2 &euro;/kg</span>
+              <span class="q-col">Col. AD</span>
+              <span class="q-value" id="qT2">&mdash;</span>
+            </div>
+            <div class="q-row">
+              <span class="q-label">Transport 3 &euro;/kg</span>
+              <span class="q-col">Col. AF</span>
+              <span class="q-value" id="qT3">&mdash;</span>
+            </div>
+            <div class="sep"></div>
+            <div class="q-row">
+              <span class="q-label" style="font-weight:600;color:var(--text)">Prix de revient (R)</span>
+              <span class="q-col">Col. R</span>
+              <span class="q-value c-green" id="qR">&mdash;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="formula-card">
+          <div class="ftitle">Formule de calcul</div>
+          <code>R = (((RM &times; W<sub>imp</sub>) + Analyses + T1 + Manuf) &times; (1/Yield) + Stockage + T2 + T3) &times; W<sub>exp</sub> &times; Assurance</code>
+        </div>
+
+        <!-- LEGEND -->
+        <div class="formula-card" style="margin-top:1rem">
+          <div class="ftitle">L&eacute;gende &mdash; Hypoth&egrave;ses de calcul</div>
+          <div style="font-size:.75rem;color:var(--text-muted);line-height:1.7">
+            <div style="margin-bottom:.6rem">
+              <span style="color:var(--blue-400);font-weight:700">Maritime (Sea)</span><br>
+              &bull; Conteneur 40' : 26 big bags (~1 m&sup3;/bb)<br>
+              &bull; Charge max : 26 000 kg<br>
+              &bull; Poids = min(26 &times; densit&eacute;, 26T)<br>
+              &bull; Co&ucirc;t : cotations r&eacute;elles Hubcycle (FATTON, EXPEDITORS)<br>
+              &bull; Si route inconnue : estimation 0.38 &euro;/km maritime<br>
+              &bull; Transit : donn&eacute;es r&eacute;elles ou ~distance/600 km/j + escales
+            </div>
+            <div style="margin-bottom:.6rem">
+              <span style="color:var(--amber-400);font-weight:700">Routier (Road)</span><br>
+              &bull; Camion tautliner FTL : 22 big bags au sol<br>
+              &bull; Charge max : 24 000 kg<br>
+              &bull; Poids = min(22 &times; densit&eacute;, 24T)<br>
+              &bull; Co&ucirc;t = distance &times; tarif &euro;/km :<br>
+              &nbsp;&nbsp;&nbsp;&lt;500 km &rarr; 1.80 &euro;/km<br>
+              &nbsp;&nbsp;&nbsp;500-1200 km &rarr; 1.55 &euro;/km<br>
+              &nbsp;&nbsp;&nbsp;&gt;1200 km &rarr; 1.35 &euro;/km<br>
+              &bull; Base : 112 cotations historiques Hubcycle
+            </div>
+            <div style="margin-bottom:.6rem">
+              <span style="color:var(--text);font-weight:700">A&eacute;rien (Air)</span><br>
+              &bull; Envoi standard 1T par d&eacute;faut<br>
+              &bull; Co&ucirc;t = EUR/kg &times; poids (tarifs FATTON/EXPEDITORS)<br>
+              &bull; Si route inconnue : 2.50 &euro;/kg par d&eacute;faut
+            </div>
+            <div>
+              <span style="color:var(--green-400);font-weight:700">Densit&eacute;</span><br>
+              &bull; T1 utilise la densit&eacute; <strong>brute</strong> (mati&egrave;re premi&egrave;re)<br>
+              &bull; T2 &amp; T3 utilisent la densit&eacute; <strong>apr&egrave;s process</strong><br>
+              &bull; Le rendement (1/Yield) corrige les co&ucirc;ts amont (RM, T1, Manuf) pour les ramener au kg de produit fini
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="processYield" value="95">
+<input type="hidden" id="manufacturing" value="0">
+<datalist id="countryList"></datalist>
+
+<script>
+  // ═══════════════════════════════════════════════
+  // PRODUCT DATABASE — from Densities sheet (HubCycled_Transport_Estimator.xlsx)
+  // density = avg(min,max) kg/m³, marketPrice = avg(min,max) EUR/kg
+  // ═══════════════════════════════════════════════
+  const PRODUCTS = {
+    // ── PEPPER ──────────────────────────────────────
+    "Black pepper whole":        { density: 550, marketPrice: 5.50, state: "Dry" },
+    "Black pepper (powder)":     { density: 525, marketPrice: 6.50, state: "Dry" },
+    "Black pepper crushed":      { density: 480, marketPrice: 4.00, state: "Dry" },
+    "Black pepper broken":       { density: 450, marketPrice: 2.50, state: "Dry" },
+    "Black pepper fines":        { density: 500, marketPrice: 2.00, state: "Dry" },
+    "Black pepper deoiled":      { density: 480, marketPrice: 1.50, state: "Dry" },
+    "Black pepper light berries":{ density: 400, marketPrice: 1.80, state: "Dry" },
+    "White pepper whole":        { density: 600, marketPrice: 7.00, state: "Dry" },
+    "White pepper powder":       { density: 550, marketPrice: 7.50, state: "Dry" },
+    "Green pepper whole":        { density: 500, marketPrice: 8.00, state: "Dry" },
+    "Pink pepper":               { density: 325, marketPrice: 12.00, state: "Dry" },
+    "Pepper husk":               { density: 180, marketPrice: 0.50, state: "Dry" },
+    // ── GARLIC & ONION ──────────────────────────────
+    "Garlic skin (dry)":         { density: 140, marketPrice: 0.15, state: "Dry" },
+    "Garlic skin powder":        { density: 325, marketPrice: 1.20, state: "Dry" },
+    "Garlic powder":             { density: 600, marketPrice: 2.50, state: "Dry" },
+    "Garlic minced":             { density: 650, marketPrice: 2.80, state: "Dry" },
+    "Garlic granulated":         { density: 580, marketPrice: 2.70, state: "Dry" },
+    "Onion powder":              { density: 575, marketPrice: 2.00, state: "Dry" },
+    "Onion granulated":          { density: 560, marketPrice: 1.80, state: "Dry" },
+    // ── GINGER ──────────────────────────────────────
+    "Ginger powder":             { density: 525, marketPrice: 3.20, state: "Dry" },
+    "Ginger whole dried":        { density: 350, marketPrice: 2.50, state: "Dry" },
+    "Ginger deoiled":            { density: 480, marketPrice: 1.50, state: "Dry" },
+    "De-juiced ginger (dry)":    { density: 275, marketPrice: 1.50, state: "Dry" },
+    "Ginger juice, frozen":      { density: 1050, marketPrice: 3.40, state: "Frozen" },
+    // ── CINNAMON / CASSIA ───────────────────────────
+    "Cinnamon powder":           { density: 475, marketPrice: 3.50, state: "Dry" },
+    "Cassia whole":              { density: 250, marketPrice: 2.80, state: "Dry" },
+    "Cassia shred":              { density: 180, marketPrice: 2.00, state: "Dry" },
+    "Cassia husk":               { density: 160, marketPrice: 0.80, state: "Dry" },
+    "Cassia bark powder":        { density: 475, marketPrice: 3.20, state: "Dry" },
+    "Cinnamon fines":            { density: 400, marketPrice: 1.50, state: "Dry" },
+    "Cinnamon deoiled":          { density: 420, marketPrice: 1.80, state: "Dry" },
+    // ── CUMIN / CORIANDER ───────────────────────────
+    "Cumin whole":               { density: 450, marketPrice: 3.00, state: "Dry" },
+    "Cumin powder":              { density: 475, marketPrice: 3.50, state: "Dry" },
+    "Cumin fines":               { density: 440, marketPrice: 1.50, state: "Dry" },
+    "Coriander whole":           { density: 350, marketPrice: 1.50, state: "Dry" },
+    "Coriander powder":          { density: 425, marketPrice: 2.20, state: "Dry" },
+    // ── CARDAMOM ────────────────────────────────────
+    "Cardamom whole":            { density: 450, marketPrice: 20.00, state: "Dry" },
+    "Cardamom husks":            { density: 150, marketPrice: 0.80, state: "Dry" },
+    "Cardamom powder":           { density: 425, marketPrice: 18.00, state: "Dry" },
+    "Cardamom fines":            { density: 380, marketPrice: 5.00, state: "Dry" },
+    // ── OTHER SPICES ────────────────────────────────
+    "Turmeric whole":            { density: 500, marketPrice: 2.00, state: "Dry" },
+    "Turmeric (powder)":         { density: 625, marketPrice: 2.80, state: "Dry" },
+    "Paprika powder":            { density: 525, marketPrice: 3.50, state: "Dry" },
+    "Chili powder":              { density: 475, marketPrice: 2.80, state: "Dry" },
+    "Chili whole dried":         { density: 250, marketPrice: 3.50, state: "Dry" },
+    "Chilli sortings":           { density: 350, marketPrice: 1.50, state: "Dry" },
+    "Nutmeg whole":              { density: 550, marketPrice: 5.00, state: "Dry" },
+    "Nutmeg powder":             { density: 475, marketPrice: 6.00, state: "Dry" },
+    "Clove whole":               { density: 500, marketPrice: 7.00, state: "Dry" },
+    "Clove powder":              { density: 575, marketPrice: 8.00, state: "Dry" },
+    "Allspice whole":            { density: 500, marketPrice: 3.50, state: "Dry" },
+    "Allspice powder":           { density: 475, marketPrice: 3.50, state: "Dry" },
+    "Star anise whole":          { density: 300, marketPrice: 6.00, state: "Dry" },
+    "Star anise broken":         { density: 280, marketPrice: 4.00, state: "Dry" },
+    "Saffron powder":            { density: 425, marketPrice: 1200.00, state: "Dry" },
+    "Saffron deoiled":           { density: 400, marketPrice: 50.00, state: "Dry" },
+    "Fenugreek powder":          { density: 500, marketPrice: 2.50, state: "Dry" },
+    "Fenugreek deoiled":         { density: 480, marketPrice: 1.20, state: "Dry" },
+    // ── HERBS ───────────────────────────────────────
+    "Basil powder":              { density: 350, marketPrice: 5.00, state: "Dry" },
+    "Basil dried leaves":        { density: 100, marketPrice: 7.00, state: "Dry" },
+    "Basil fines":               { density: 300, marketPrice: 1.50, state: "Dry" },
+    "Oregano dried":             { density: 120, marketPrice: 5.00, state: "Dry" },
+    "Oregano / Basil (dried)":   { density: 115, marketPrice: 7.00, state: "Dry" },
+    "Rosemary dried":            { density: 150, marketPrice: 4.00, state: "Dry" },
+    "Thyme dried":               { density: 160, marketPrice: 5.00, state: "Dry" },
+    "Mint dried":                { density: 130, marketPrice: 5.50, state: "Dry" },
+    "Chamomile powder":          { density: 375, marketPrice: 12.00, state: "Dry" },
+    "Parsley dried":             { density: 140, marketPrice: 4.00, state: "Dry" },
+    "Alfalfa powder":            { density: 350, marketPrice: 1.50, state: "Dry" },
+    "Barleygrass powder":        { density: 380, marketPrice: 2.50, state: "Dry" },
+    // ── VANILLA ─────────────────────────────────────
+    "Exhausted vanilla pods":    { density: 400, marketPrice: 3.50, state: "Dry" },
+    "Vanilla powder":            { density: 475, marketPrice: 8.00, state: "Dry" },
+    "Vanilla beans extraction grade": { density: 380, marketPrice: 25.00, state: "Dry" },
+    // ── COCOA & COFFEE ──────────────────────────────
+    "Cocoa powder":              { density: 575, marketPrice: 9.00, state: "Dry" },
+    "Cocoa husks":               { density: 250, marketPrice: 0.50, state: "Dry" },
+    "Cocoa shells":              { density: 200, marketPrice: 0.30, state: "Dry" },
+    "Coffee grounds":            { density: 475, marketPrice: 0.05, state: "Dry" },
+    "Green coffee extract":      { density: 600, marketPrice: 25.00, state: "Dry" },
+    // ── FRUITS ──────────────────────────────────────
+    "Apple pomace (dry)":        { density: 400, marketPrice: 0.80, state: "Dry" },
+    "Apple pomace (wet)":        { density: 800, marketPrice: 0.05, state: "Fresh" },
+    "Apple powder":              { density: 500, marketPrice: 4.00, state: "Dry" },
+    "Apple chips":               { density: 120, marketPrice: 5.00, state: "Dry" },
+    "Apple peel dried":          { density: 200, marketPrice: 1.00, state: "Dry" },
+    "Blueberry pomace (dry)":    { density: 380, marketPrice: 4.00, state: "Dry" },
+    "Blackberry pomace":         { density: 380, marketPrice: 1.50, state: "Dry" },
+    "Cranberry pomace":          { density: 400, marketPrice: 2.00, state: "Dry" },
+    "Citrus pomace":             { density: 360, marketPrice: 0.60, state: "Dry" },
+    "Lemon peel dried":          { density: 320, marketPrice: 1.50, state: "Dry" },
+    "Orange peel dried":         { density: 300, marketPrice: 1.00, state: "Dry" },
+    "Mango puree":               { density: 1050, marketPrice: 1.50, state: "Liquid" },
+    "Aronia concentrate":        { density: 1200, marketPrice: 2.50, state: "Liquid" },
+    "Elderberry concentrate":    { density: 1250, marketPrice: 3.00, state: "Liquid" },
+    "Spray-dried fruits":        { density: 500, marketPrice: 18.00, state: "Dry" },
+    "Freeze-dried fruit":        { density: 100, marketPrice: 25.00, state: "Dry" },
+    "Fruit juice (liquid)":      { density: 1040, marketPrice: 1.20, state: "Liquid" },
+    "Concentrated juice (>60 Brix)": { density: 1300, marketPrice: 2.50, state: "Liquid" },
+    // ── PRESS CAKES & OILS ──────────────────────────
+    "Almond press cakes":        { density: 480, marketPrice: 2.50, state: "Dry" },
+    "Hazelnut press cakes":      { density: 490, marketPrice: 3.00, state: "Dry" },
+    "Coconut press cakes":       { density: 520, marketPrice: 1.00, state: "Dry" },
+    "Black cumin press cakes":   { density: 500, marketPrice: 2.00, state: "Dry" },
+    "Apricot kernel press cakes":{ density: 470, marketPrice: 1.50, state: "Dry" },
+    // ── OTHER ───────────────────────────────────────
+    "Hop pellets":               { density: 525, marketPrice: 3.50, state: "Dry" },
+    "Devil's claw":              { density: 425, marketPrice: 8.00, state: "Dry" },
+    "Brewery spent grain (dry)": { density: 375, marketPrice: 0.15, state: "Dry" },
+    "Spirulina powder":          { density: 475, marketPrice: 15.00, state: "Dry" },
+    "Ashwagandha powder":        { density: 450, marketPrice: 6.00, state: "Dry" },
+    "Eggshell":                  { density: 950, marketPrice: 0.30, state: "Dry" },
+    "Raw feathers":              { density: 55,  marketPrice: 0.10, state: "Dry" },
+    "Aquafaba concentrate":      { density: 1050, marketPrice: 3.00, state: "Liquid" },
+    // ── HEAT TREATED (HT) — m&ecirc;me densit&eacute;, prix +20-25% (food-safe, pr&ecirc;t &agrave; l'emploi) ──
+    "Black pepper powder HT":    { density: 525, marketPrice: 8.00, state: "Dry" },
+    "Black pepper crushed HT":   { density: 480, marketPrice: 5.00, state: "Dry" },
+    "White pepper powder HT":    { density: 550, marketPrice: 9.00, state: "Dry" },
+    "Garlic powder HT":          { density: 600, marketPrice: 3.20, state: "Dry" },
+    "Garlic skin powder HT":     { density: 325, marketPrice: 1.50, state: "Dry" },
+    "Onion powder HT":           { density: 575, marketPrice: 2.50, state: "Dry" },
+    "Ginger powder HT":          { density: 525, marketPrice: 4.00, state: "Dry" },
+    "Cinnamon powder HT":        { density: 475, marketPrice: 4.30, state: "Dry" },
+    "Cassia bark powder HT":     { density: 475, marketPrice: 4.00, state: "Dry" },
+    "Cumin powder HT":           { density: 475, marketPrice: 4.30, state: "Dry" },
+    "Coriander powder HT":       { density: 425, marketPrice: 2.80, state: "Dry" },
+    "Turmeric powder HT":        { density: 625, marketPrice: 3.50, state: "Dry" },
+    "Paprika powder HT":         { density: 525, marketPrice: 4.30, state: "Dry" },
+    "Chili powder HT":           { density: 475, marketPrice: 3.50, state: "Dry" },
+    "Nutmeg powder HT":          { density: 475, marketPrice: 7.50, state: "Dry" },
+    "Clove powder HT":           { density: 575, marketPrice: 10.00, state: "Dry" },
+    "Cardamom powder HT":        { density: 425, marketPrice: 22.00, state: "Dry" },
+    "Allspice powder HT":        { density: 475, marketPrice: 4.30, state: "Dry" },
+    "Fenugreek powder HT":       { density: 500, marketPrice: 3.20, state: "Dry" },
+    "Basil powder HT":           { density: 350, marketPrice: 6.50, state: "Dry" },
+    "Oregano powder HT":         { density: 350, marketPrice: 6.50, state: "Dry" },
+    "Rosemary powder HT":        { density: 350, marketPrice: 5.00, state: "Dry" },
+    "Thyme powder HT":           { density: 350, marketPrice: 6.50, state: "Dry" },
+    "Parsley powder HT":         { density: 350, marketPrice: 5.00, state: "Dry" },
+    "Chamomile powder HT":       { density: 375, marketPrice: 15.00, state: "Dry" },
+    "Cocoa powder HT":           { density: 575, marketPrice: 11.00, state: "Dry" },
+    "Apple pomace powder HT":    { density: 400, marketPrice: 1.20, state: "Dry" },
+    "Vanilla powder HT":         { density: 475, marketPrice: 10.00, state: "Dry" },
+    "Spirulina powder HT":       { density: 475, marketPrice: 18.00, state: "Dry" },
+    "Ashwagandha powder HT":     { density: 450, marketPrice: 7.50, state: "Dry" },
+  };
+
+  // ═══════════════════════════════════════════════
+  // ROAD DISTANCES — from Road Distances sheet (xlsx)
+  // Hub central: Carpentras (J11)
+  // ═══════════════════════════════════════════════
+  const ROAD_DISTANCES = {
+    // To/from France
+    "France|France": 300,
+    "Netherlands|France": 1200, "Belgium|France": 1050,
+    "Germany|France": 1100, "Germany (North)|France": 1300, "Germany (South)|France": 850,
+    "Spain|France": 900, "Spain (Barcelona)|France": 600, "Spain (Madrid)|France": 1250,
+    "Italy|France": 800, "Italy (North)|France": 550, "Italy (South)|France": 1200,
+    "Portugal|France": 1700, "UK|France": 1300, "United Kingdom|France": 1300,
+    "Poland|France": 2000, "Czech Republic|France": 1400,
+    "Austria|France": 1100, "Switzerland|France": 650,
+    "Denmark|France": 1600, "Sweden|France": 2200, "Norway|France": 2400,
+    "Hungary|France": 1600, "Romania|France": 2200,
+    "Greece|France": 2400, "Turkey|France": 3000,
+    // Cross-European
+    "Netherlands|Germany": 450, "Netherlands|Spain": 1800,
+    "Netherlands|Italy": 1400, "Netherlands|Poland": 1100,
+    "Germany|Spain": 1900, "Germany|Italy": 1000, "Germany|Poland": 700,
+    "Spain|Italy": 1500, "Spain|Portugal": 600, "Spain|Germany": 1900,
+    // Domestic
+    "Germany|Germany": 500, "Spain|Spain": 500, "Italy|Italy": 500,
+  };
+
+  // ═══════════════════════════════════════════════
+  // SEA DISTANCES — from Road Distances sheet (intercontinental)
+  // ═══════════════════════════════════════════════
+  const SEA_DISTANCES = {
+    "India|France": 8500, "India|Germany": 9000, "India|Indonesia": 5500,
+    "Brazil|France": 8500, "Guatemala|France": 9500,
+    "Mexico|France": 9000, "Peru|France": 10500,
+    "USA|France": 7500, "United States|France": 7500,
+    "Vietnam|France": 10500, "Intra-Europe|Europe": 1000,
+  };
+
+  // ═══════════════════════════════════════════════
+  // SEA FREIGHT RATES — from Sea Rates sheet (xlsx)
+  // { cost: EUR, weight: kg, transit: days, container }
+  // ═══════════════════════════════════════════════
+  const SEA_RATES = {
+    "Brazil|France|20":     { cost: 3400, weight: 10000, transit: 28 },
+    "Guatemala|France|20":  { cost: 4600, weight: 6000,  transit: 38 },
+    "Guatemala|France|40":  { cost: 3140, weight: 25000, transit: 35 },
+    "India|France|40":      { cost: 2150, weight: 20000, transit: 38 },
+    "India|Germany|40":     { cost: 2150, weight: 20000, transit: 38 },
+    "India|Indonesia|40":   { cost: 1250, weight: 20000, transit: 21 },
+    "Mexico|France|40":     { cost: 6018, weight: 20000, transit: 35 },
+    "Peru|France|20":       { cost: 2637, weight: 5000,  transit: 46 },
+    "Peru|France|40":       { cost: 2858, weight: 10000, transit: 46 },
+    "USA|France|40":        { cost: 3530, weight: 4522,  transit: 46 },
+    "United States|France|40": { cost: 3530, weight: 4522, transit: 46 },
+    "Vietnam|France|40":    { cost: 5135, weight: 25000, transit: 33 },
+    "Intra-Europe||Truck":  { cost: 800,  weight: 10000, transit: 5  },
+  };
+
+  // ═══════════════════════════════════════════════
+  // AIR FREIGHT RATES — from Air Rates sheet (xlsx)
+  // { eurPerKg, transit }
+  // ═══════════════════════════════════════════════
+  const AIR_RATES = {
+    "USA|France":       { eurPerKg: 2.10, transit: 5 },
+    "United States|France": { eurPerKg: 2.10, transit: 5 },
+    "France|USA":       { eurPerKg: 2.05, transit: 5 },
+    "India|France":     { eurPerKg: 2.50, transit: 3 },
+    "Vietnam|France":   { eurPerKg: 3.00, transit: 4 },
+    "Brazil|France":    { eurPerKg: 3.50, transit: 4 },
+    "Guatemala|France": { eurPerKg: 3.50, transit: 4 },
+    "Mexico|France":    { eurPerKg: 3.00, transit: 4 },
+    "Intra-Europe":     { eurPerKg: 1.50, transit: 1 },
+  };
+
+  // ═══════════════════════════════════════════════
+  // ROAD EUR/km RATES — from Road Distances sheet (xlsx)
+  // Based on 112 historical Hubcycle quotations
+  // ═══════════════════════════════════════════════
+  const ROAD_EUR_PER_KM = [
+    { maxKm: 500,  rate: 1.80 },  // Short distance
+    { maxKm: 1200, rate: 1.55 },  // Medium distance
+    { maxKm: 99999, rate: 1.35 }, // Long distance
+  ];
+
+  // ═══════════════════════════════════════════════
+  // ROAD BENCHMARKS — avg cost by weight range (xlsx)
+  // ═══════════════════════════════════════════════
+  const ROAD_BENCHMARKS = [
+    { minKg: 0,     maxKg: 500,   eurPerKg: 7.06, avgCost: 534 },
+    { minKg: 500,   maxKg: 2000,  eurPerKg: 0.56, avgCost: 401 },
+    { minKg: 2000,  maxKg: 7000,  eurPerKg: 0.20, avgCost: 844 },
+    { minKg: 7000,  maxKg: 15000, eurPerKg: 0.16, avgCost: 1755 },
+    { minKg: 15000, maxKg: 50000, eurPerKg: 0.12, avgCost: 2839 },
+  ];
+
+  // ═══════════════════════════════════════════════
+  // PROCESS YIELDS — from Process Yields sheet (xlsx)
+  // ═══════════════════════════════════════════════
+  const PROCESS_YIELDS = {
+    "Heat treatment":               { defaultYield: 98, min: 95, max: 100 },
+    "Grinding (non-fibrous)":       { defaultYield: 95, min: 90, max: 98 },
+    "Grinding (fibrous / sieving)": { defaultYield: 87, min: 82, max: 92 },
+    "Drying":                       { defaultYield: 70, min: 50, max: 90 },
+    "Freeze-drying":                { defaultYield: 70, min: 50, max: 90 },
+  };
+
+  // ═══════════════════════════════════════════════
+  // COUNTRY LIST — all countries from distance tables + partners
+  // ═══════════════════════════════════════════════
+  // ═══════════════════════════════════════════════
+  // ALL COUNTRIES — name + approx lat/lon for geodesic fallback
+  // ═══════════════════════════════════════════════
+  const GEO = {
+    "Afghanistan":[33,65],"Albania":[41,20],"Algeria":[28,3],"Andorra":[42.5,1.5],
+    "Angola":[-12.5,18.5],"Argentina":[-34,-64],"Armenia":[40,45],"Australia":[-27,133],
+    "Austria":[47.3,13.3],"Azerbaijan":[40.5,47.5],"Bahrain":[26,50.5],"Bangladesh":[24,90],
+    "Belarus":[53,28],"Belgium":[50.8,4.4],"Benin":[9.5,2.3],"Bhutan":[27.5,90.5],
+    "Bolivia":[-17,-65],"Bosnia and Herzegovina":[44,18],"Botswana":[-22,24],"Brazil":[-15,-47],
+    "Brunei":[4.5,114.7],"Bulgaria":[43,25],"Burkina Faso":[13,-1.5],"Burundi":[-3.4,29.4],
+    "Cambodia":[12.6,105],"Cameroon":[6,12],"Canada":[56,-106],"Cape Verde":[16,-24],
+    "Central African Republic":[7,21],"Chad":[15,19],"Chile":[-33.5,-70.7],"China":[35,105],
+    "Colombia":[4,-72],"Comoros":[-12.2,44.3],"Congo":[-1,15],"Costa Rica":[10,-84],
+    "Croatia":[45.2,15.5],"Cuba":[21.5,-80],"Cyprus":[35,33],"Czech Republic":[49.8,15.5],
+    "Denmark":[56,10],"Djibouti":[11.6,43.1],"Dominican Republic":[19,-70.7],
+    "DR Congo":[-4,22],"Ecuador":[-2,-77.5],"Egypt":[27,30],"El Salvador":[13.8,-88.9],
+    "Equatorial Guinea":[2,10],"Eritrea":[15,39],"Estonia":[59,26],"Eswatini":[-26.5,31.5],
+    "Ethiopia":[8,38],"Fiji":[-18,175],"Finland":[64,26],"France":[46.6,2.2],
+    "Gabon":[-1,11.8],"Gambia":[13.5,-16.6],"Georgia":[42,43.5],"Germany":[51.2,10.4],
+    "Ghana":[8,-2],"Greece":[39,22],"Guatemala":[15.5,-90.3],"Guinea":[11,-12],
+    "Guinea-Bissau":[12,-15],"Guyana":[5,-59],"Haiti":[19,-72.3],"Honduras":[15,-86.5],
+    "Hungary":[47.2,19.5],"Iceland":[65,-18],"India":[20,77],"Indonesia":[-5,120],
+    "Iran":[32,53],"Iraq":[33,44],"Ireland":[53.4,-8],"Israel":[31.5,34.8],
+    "Italy":[42.8,12.8],"Ivory Coast":[7.5,-5.5],"Jamaica":[18.1,-77.3],"Japan":[36,138],
+    "Jordan":[31,36],"Kazakhstan":[48,68],"Kenya":[-1,38],"Kuwait":[29.3,47.8],
+    "Kyrgyzstan":[41,75],"Laos":[18,105],"Latvia":[57,25],"Lebanon":[33.8,35.8],
+    "Lesotho":[-29.5,28.5],"Liberia":[6.5,-9.5],"Libya":[25,17],"Lithuania":[56,24],
+    "Luxembourg":[49.8,6.1],"Madagascar":[-20,47],"Malawi":[-13.5,34],
+    "Malaysia":[2.5,112.5],"Maldives":[3.2,73],"Mali":[17,-4],"Malta":[35.9,14.4],
+    "Mauritania":[20,-12],"Mauritius":[-20.3,57.6],"Mexico":[23,-102],"Moldova":[47,29],
+    "Monaco":[43.7,7.4],"Mongolia":[46,105],"Montenegro":[42.5,19.3],"Morocco":[32,-5],
+    "Mozambique":[-18.3,35],"Myanmar":[22,98],"Namibia":[-22,17],"Nepal":[28,84],
+    "Netherlands":[52.1,5.3],"New Zealand":[-41,174],"Nicaragua":[13,-85],
+    "Niger":[16,8],"Nigeria":[10,8],"North Korea":[40,127],"North Macedonia":[41.5,22],
+    "Norway":[62,10],"Oman":[21,57],"Pakistan":[30,70],"Palestine":[32,35.3],
+    "Panama":[9,-80],"Papua New Guinea":[-6,147],"Paraguay":[-23,-58],"Peru":[-10,-76],
+    "Philippines":[13,122],"Poland":[52,20],"Portugal":[39.4,-8],"Qatar":[25.5,51.3],
+    "Romania":[46,25],"Russia":[60,100],"Russian Federation":[56,38],"Rwanda":[-2,30],
+    "San Marino":[43.9,12.4],"Saudi Arabia":[24,45],"Senegal":[14,-14],
+    "Serbia":[44,21],"Sierra Leone":[8.5,-11.8],"Singapore":[1.4,103.8],
+    "Slovakia":[48.7,19.7],"Slovenia":[46.1,15],"Somalia":[5,46],
+    "South Africa":[-29,24],"South Korea":[36,128],"South Sudan":[8,32],
+    "Spain":[40.4,-3.7],"Sri Lanka":[7.9,80.8],"Sudan":[15,30],
+    "Suriname":[4,-56],"Sweden":[62,15],"Switzerland":[46.8,8.2],
+    "Syria":[35,38],"São Tomé and Príncipe":[0.3,6.7],
+    "Taiwan":[23.5,121],"Tajikistan":[39,71],"Tanzania":[-6.3,35],"Thailand":[15,100],
+    "Togo":[8,1.2],"Trinidad and Tobago":[10.4,-61.3],"Tunisia":[34,9],
+    "Turkey":[39,35],"Turkmenistan":[40,60],"Uganda":[1,32],
+    "Ukraine":[49,32],"United Arab Emirates":[24,54],"United Kingdom":[51.5,-0.1],
+    "United States":[38,-97],"Uruguay":[-33,-56],"Uzbekistan":[41,64],
+    "Venezuela":[8,-66],"Vietnam":[16,108],"Yemen":[15,48],
+    "Zambia":[-15,28],"Zimbabwe":[-20,30],
+    // Aliases
+    "UK":[51.5,-0.1],"USA":[38,-97],"Intra-Europe":[48,7],
+  };
+  const COUNTRIES = Object.keys(GEO).filter(c => c.length > 2).sort();
+
+  // Populate datalists on load
+  function initDataLists() {
+    // Products
+    const pList = document.getElementById('productList');
+    Object.keys(PRODUCTS).sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      pList.appendChild(opt);
+    });
+    // Countries
+    const cList = document.getElementById('countryList');
+    COUNTRIES.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      cList.appendChild(opt);
+    });
+  }
+
+  // ═══════════════════════════════════════════════
+  // AUTO-FILL: Product → density, state, market price
+  // ═══════════════════════════════════════════════
+  function onProductChange() {
+    const name = document.getElementById('productName').value.trim();
+    const hint = document.getElementById('productHint');
+    // Try exact match first, then case-insensitive partial
+    let match = PRODUCTS[name];
+    if (!match) {
+      const lower = name.toLowerCase();
+      for (const [k, v] of Object.entries(PRODUCTS)) {
+        if (k.toLowerCase() === lower || k.toLowerCase().startsWith(lower) && lower.length >= 3) {
+          match = v;
+          break;
+        }
+      }
+    }
+    if (match) {
+      document.getElementById('bulkDensity').value = match.density;
+      document.getElementById('processedDensity').value = match.density;
+      document.getElementById('marketPrice').value = match.marketPrice;
+      // Set state dropdown
+      const stateEl = document.getElementById('productState');
+      for (let i = 0; i < stateEl.options.length; i++) {
+        if (stateEl.options[i].value === match.state) { stateEl.selectedIndex = i; break; }
+      }
+      hint.innerHTML = '\u2705 Densit\u00E9 ' + match.density + ' kg/m\u00B3 \u2022 Prix march\u00E9 ' + match.marketPrice.toFixed(2) + ' \u20AC/kg <span class="auto-tag">auto</span>';
+    } else {
+      hint.textContent = name.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle' : '';
+    }
+    recalc();
+  }
+
+  // ═══════════════════════════════════════════════
+  // MULTI-PROCESS: add/remove steps, auto-fill yield per type
+  // ═══════════════════════════════════════════════
+  let stepCounter = 1;
+
+  function onStepTypeChange(selectEl) {
+    const type = selectEl.value;
+    const yieldData = PROCESS_YIELDS[type];
+    const row = selectEl.closest('.process-step');
+    if (yieldData) {
+      row.querySelector('.step-yield').value = yieldData.defaultYield;
+    }
+    recalcProcess();
+  }
+
+  function addProcessStep() {
+    stepCounter++;
+    const container = document.getElementById('processSteps');
+    const div = document.createElement('div');
+    div.className = 'process-step';
+    div.dataset.step = stepCounter;
+    div.innerHTML = `
+      <div class="form-grid" style="grid-template-columns:1fr 100px 100px auto;gap:.5rem;align-items:end;margin-bottom:.5rem">
+        <div class="form-group">
+          <label>\u00C9tape ${container.children.length + 1}</label>
+          <select class="step-type" onchange="onStepTypeChange(this)">
+            <option value="">-- Aucun --</option>
+            <option value="Heat treatment">Heat treatment (98%)</option>
+            <option value="Grinding (non-fibrous)">Grinding / non-fibrous (95%)</option>
+            <option value="Grinding (fibrous / sieving)">Grinding / fibrous + sieving (87%)</option>
+            <option value="Drying">Drying (70%)</option>
+            <option value="Freeze-drying">Freeze-drying (70%)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Rendement</label>
+          <div class="input-wrap">
+            <input type="number" class="step-yield" value="95" min="1" max="100" step="1" oninput="recalcProcess()">
+            <span class="unit-label">%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Co\u00FBt</label>
+          <div class="input-wrap">
+            <input type="number" class="step-cost" value="0" min="0" step="0.01" oninput="recalcProcess()">
+            <span class="unit-label">\u20AC/kg</span>
+          </div>
+        </div>
+        <div style="padding-bottom:.3rem">
+          <button class="btn btn-ghost" style="font-size:.7rem;padding:.3rem .5rem;color:var(--red-400)" onclick="removeProcessStep(this)" title="Supprimer">\u00D7</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+    recalcProcess();
+  }
+
+  function removeProcessStep(btn) {
+    const step = btn.closest('.process-step');
+    const container = document.getElementById('processSteps');
+    if (container.children.length > 1) {
+      step.remove();
+      // Renumber labels
+      [...container.children].forEach((s, i) => {
+        s.querySelector('label').textContent = '\u00C9tape ' + (i + 1);
+      });
+      recalcProcess();
+    }
+  }
+
+  function recalcProcess() {
+    const steps = document.querySelectorAll('.process-step');
+    let totalYield = 1;
+    let totalCost = 0;
+    steps.forEach(step => {
+      const y = parseFloat(step.querySelector('.step-yield').value) || 100;
+      const c = parseFloat(step.querySelector('.step-cost').value) || 0;
+      totalYield *= (y / 100);
+      totalCost += c;
+    });
+    // Update hidden field for recalc formula
+    document.getElementById('processYield').value = Math.round(totalYield * 100);
+    document.getElementById('manufacturing').value = totalCost;
+    // Update display
+    document.getElementById('totalYieldDisplay').textContent = Math.round(totalYield * 100) + '%';
+    document.getElementById('totalManufDisplay').textContent = totalCost.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' \u20AC/kg';
+    recalc();
+  }
+
+  // ═══════════════════════════════════════════════
+  // OUTPUT PRODUCT: changes market price to output product
+  // ═══════════════════════════════════════════════
+  function onOutputProductChange() {
+    const name = document.getElementById('outputProduct').value.trim();
+    const hint = document.getElementById('outputHint');
+    let match = PRODUCTS[name];
+    if (!match) {
+      const lower = name.toLowerCase();
+      for (const [k, v] of Object.entries(PRODUCTS)) {
+        if (k.toLowerCase() === lower || (k.toLowerCase().startsWith(lower) && lower.length >= 3)) {
+          match = v; break;
+        }
+      }
+    }
+    if (match) {
+      document.getElementById('marketPrice').value = match.marketPrice;
+      document.getElementById('processedDensity').value = match.density;
+      hint.innerHTML = '\u2705 Prix march\u00E9 ' + match.marketPrice.toFixed(2) + ' \u20AC/kg \u2022 Densit\u00E9 ' + match.density + ' kg/m\u00B3 <span class="auto-tag">auto</span>';
+    } else {
+      hint.textContent = name.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle du prix march\u00E9' : 'Le prix march\u00E9 sera compar\u00E9 \u00E0 ce produit';
+    }
+    recalc();
+  }
+
+  // ═══════════════════════════════════════════════
+  // AUTO-FILL: Countries → distance + freight cost + transit
+  // ═══════════════════════════════════════════════
+  // Normalize country name aliases
+  const COUNTRY_ALIASES = {
+    "united kingdom": "UK", "uk": "UK", "england": "UK", "great britain": "UK",
+    "united states": "USA", "usa": "USA", "us": "USA",
+    "the netherlands": "Netherlands", "holland": "Netherlands",
+    "brasil": "Brazil",
+  };
+  function norm(country) {
+    const lower = country.toLowerCase().trim();
+    return COUNTRY_ALIASES[lower] || country.trim();
+  }
+
+  function tryLookup(table, o, d) {
+    return table[o + '|' + d] || table[d + '|' + o]
+        || table[norm(o) + '|' + norm(d)] || table[norm(d) + '|' + norm(o)]
+        || null;
+  }
+
+  // Haversine geodesic distance (km)
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371, toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function geoFallback(origin, dest, mode) {
+    const c1 = GEO[origin] || GEO[norm(origin)];
+    const c2 = GEO[dest] || GEO[norm(dest)];
+    if (!c1 || !c2) return null;
+    const straight = haversineKm(c1[0], c1[1], c2[0], c2[1]);
+    if (mode === 'Road' || mode === 'Rail') return Math.round(straight * 1.3 / 50) * 50;
+    if (mode === 'Sea') return Math.round(straight * 1.4 / 100) * 100;
+    if (mode === 'Air') return Math.round(straight / 100) * 100;
+    return Math.round(straight / 100) * 100;
+  }
+
+  function lookupDistance(origin, dest, mode) {
+    // 1. Try exact lookup from xlsx data
+    if (mode === 'Road' || mode === 'Rail') {
+      const exact = tryLookup(ROAD_DISTANCES, origin, dest);
+      if (exact) return exact;
+    }
+    if (mode === 'Sea' || mode === 'Air') {
+      const exact = tryLookup(SEA_DISTANCES, origin, dest);
+      if (exact) return exact;
+    }
+    // 2. Fallback: geodesic calculation
+    return geoFallback(origin, dest, mode);
+  }
+
+  function estimateRoadCost(distKm) {
+    // EUR/km rate based on distance bracket (from xlsx)
+    let rate = 1.55;
+    for (const b of ROAD_EUR_PER_KM) {
+      if (distKm <= b.maxKm) { rate = b.rate; break; }
+    }
+    return Math.round(distKm * rate);
+  }
+
+  function estimateRoadTransit(distKm) {
+    if (distKm <= 500) return 1;
+    if (distKm <= 1200) return 2;
+    if (distKm <= 2000) return 3;
+    return Math.ceil(distKm / 700);
+  }
+
+  // ═══════════════════════════════════════════════
+  // CAPACITY — auto-calculate weight from density + transport mode
+  // 40' container: ~67 m³ usable, max payload 26 000 kg
+  // 20' container: ~33 m³ usable, max payload 21 000 kg
+  // FTL truck (EU): ~86 m³, max payload 26 000 kg (tautliner)
+  // Big bag: ~1 m³ each, 26 big bags in a 40'
+  // ═══════════════════════════════════════════════
+  // Capacités réelles avec big bags (~1 m³/big bag)
+  // 40' container: 26 big bags, max payload 26 000 kg
+  // 20' container: 13 big bags, max payload 21 000 kg
+  // Truck FTL tautliner: 22 big bags (sol), max payload 24 000 kg
+  //   (13.6m long × 2 rangées = ~22 positions big bag au sol)
+  const CONTAINER = {
+    "40": { bigBags: 26, maxKg: 26000 },
+    "20": { bigBags: 13, maxKg: 21000 },
+    "Truck": { bigBags: 22, maxKg: 24000 },
+  };
+
+  function estimateWeight(density, mode) {
+    if (density <= 0) return 0;
+    if (mode === 'Sea') {
+      const c = CONTAINER["40"];
+      return Math.min(c.bigBags * density, c.maxKg);
+    }
+    if (mode === 'Road' || mode === 'Rail') {
+      const c = CONTAINER["Truck"];
+      return Math.min(c.bigBags * density, c.maxKg);
+    }
+    if (mode === 'Air') {
+      return 1000; // envoi aérien standard ~1T
+    }
+    return 0;
+  }
+
+  function onRouteChange(prefix) {
+    const originEl = document.getElementById(prefix + 'Origin');
+    const destEl = document.getElementById(prefix + 'Dest');
+    const modeEl = document.getElementById(prefix + 'Mode');
+    const distEl = document.getElementById(prefix + 'Distance');
+    const costEl = document.getElementById(prefix + 'Cost');
+    const transitEl = document.getElementById(prefix + 'Transit');
+    const weightEl = document.getElementById(prefix + 'Weight');
+
+    const origin = originEl ? originEl.value.trim() : 'France';
+    const dest = destEl.value.trim();
+    const mode = modeEl.value;
+
+    // 1. Auto-fill distance
+    const dist = lookupDistance(origin, dest, mode);
+    if (dist !== null) distEl.value = dist;
+
+    // 2. Auto-fill weight from density
+    // T1 uses raw density, T2/T3 use processed density
+    const densityField = (prefix === 't1') ? 'bulkDensity' : 'processedDensity';
+    const density = v(densityField);
+    if (density > 0) {
+      weightEl.value = estimateWeight(density, mode);
+    }
+
+    // 3. Auto-fill freight cost & transit
+    if (mode === 'Road') {
+      const d = dist || parseFloat(distEl.value) || 0;
+      if (d > 0) {
+        costEl.value = estimateRoadCost(d);
+        transitEl.value = estimateRoadTransit(d);
+      }
+    } else if (mode === 'Sea') {
+      const o = norm(origin), d = norm(dest);
+      const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
+                || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
+      if (rate) {
+        costEl.value = rate.cost;
+        transitEl.value = rate.transit;
+      } else {
+        // Fallback: estimate sea freight from distance (~0.38 EUR/km for container)
+        const seaDist = parseFloat(distEl.value) || 0;
+        if (seaDist > 0) {
+          costEl.value = Math.round(seaDist * 0.38);
+          transitEl.value = Math.round(seaDist / 600) + 5; // ~600 km/day + port time
+        }
+      }
+    } else if (mode === 'Air') {
+      const o = norm(origin), d = norm(dest);
+      const rate = AIR_RATES[o+'|'+d] || AIR_RATES[origin+'|'+dest];
+      const eurPerKg = rate ? rate.eurPerKg : 2.50; // default 2.50 EUR/kg if unknown
+      const transit = rate ? rate.transit : Math.max(2, Math.round(parseFloat(distEl.value) / 3000));
+      const weight = parseFloat(weightEl.value) || 1000;
+      costEl.value = Math.round(eurPerKg * weight);
+      transitEl.value = transit;
+    }
+
+    recalc();
+  }
+
+  // Recalc distance when mode changes
+  document.addEventListener('DOMContentLoaded', () => {
+    ['t1Mode','t2Mode','t3Mode'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => {
+        onRouteChange(id.substring(0, 2));
+      });
+    });
+  });
+
+  // ═══════════════════════════════════════════════
+  // CORE HELPERS
+  // ═══════════════════════════════════════════════
+  function v(id) {
+    return parseFloat(document.getElementById(id).value) || 0;
+  }
+  function fmt(n, dec = 3) {
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function fmtPct(n) {
+    return (n * 100).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
+  }
+
+  function recalc() {
+    const t1w = v('t1Weight'), t2w = v('t2Weight'), t3w = v('t3Weight');
+    const t1perkg = t1w > 0 ? v('t1Cost') / t1w : 0;
+    const t2perkg = t2w > 0 ? v('t2Cost') / t2w : 0;
+    const t3perkg = t3w > 0 ? v('t3Cost') / t3w : 0;
+    const totalTransport = t1perkg + t2perkg + t3perkg;
+
+    document.getElementById('t1PerKg').textContent = fmt(t1perkg) + ' \u20AC';
+    document.getElementById('t2PerKg').textContent = fmt(t2perkg) + ' \u20AC';
+    document.getElementById('t3PerKg').textContent = fmt(t3perkg) + ' \u20AC';
+    document.getElementById('t1Badge').textContent = fmt(t1perkg) + ' \u20AC/kg';
+    document.getElementById('t2Badge').textContent = fmt(t2perkg) + ' \u20AC/kg';
+    document.getElementById('t3Badge').textContent = fmt(t3perkg) + ' \u20AC/kg';
+
+    // T1 capacity uses raw/bulk density
+    const rawDensity = v('bulkDensity');
+    if (rawDensity > 0) {
+      const bigBags = 26, totalKg = bigBags * rawDensity;
+      document.getElementById('t1CapInfo').textContent =
+        `40' container \u2014 ${bigBags} big bags \u00D7 ${rawDensity} kg/bb = ${totalKg.toLocaleString('fr-FR')} kg (densit\u00E9 brute)`;
+    }
+    // T2 capacity uses processed density
+    const procDensity = v('processedDensity');
+    if (procDensity > 0) {
+      const cap = Math.round(procDensity * 22.1);
+      document.getElementById('t2Capacity').value = cap;
+    }
+
+    const RM = v('rawPrice'), Wimp = v('importTax'), analysis = v('analyses');
+    const manuf = v('manufacturing'), yieldPct = v('processYield') / 100;
+    const storage = v('storage'), Wexp = v('exportTax'), ins = v('insurance');
+    const marketPrice = v('marketPrice'), targetMarginPct = v('targetMargin') / 100;
+
+    let R = 0;
+    if (yieldPct > 0) {
+      R = (((RM * Wimp) + analysis + t1perkg + manuf) * (1 / yieldPct) + storage + t2perkg + t3perkg) * Wexp * ins;
+    }
+
+    const target20 = marketPrice * 0.80;
+    const target30 = marketPrice * 0.70;
+    const margin20 = R > 0 ? (target20 - R) / target20 : 0;
+    const margin30 = R > 0 ? (target30 - R) / target30 : 0;
+    const costVsMarket = marketPrice > 0 ? (R - marketPrice) / marketPrice : 0;
+    const minSell = targetMarginPct < 1 ? R / (1 - targetMarginPct) : 0;
+    const gapVsMarket = marketPrice > 0 ? (marketPrice - minSell) / marketPrice : 0;
+
+    // Transport section
+    document.getElementById('rT1').textContent = fmt(t1perkg) + ' \u20AC';
+    document.getElementById('rT2').textContent = fmt(t2perkg) + ' \u20AC';
+    document.getElementById('rT3').textContent = fmt(t3perkg) + ' \u20AC';
+    document.getElementById('rTotalTransport').textContent = fmt(totalTransport) + ' \u20AC';
+
+    // Other costs section
+    document.getElementById('rRM').textContent = fmt(RM * Wimp) + ' \u20AC';
+    document.getElementById('rAnalyses').textContent = fmt(analysis) + ' \u20AC';
+    document.getElementById('rManuf').textContent = fmt(manuf) + ' \u20AC';
+    document.getElementById('rYield').textContent = '\u00D7 ' + fmt(yieldPct > 0 ? 1/yieldPct : 0, 2);
+    document.getElementById('rStorage').textContent = fmt(storage) + ' \u20AC';
+    const taxInsLabel = (Wexp !== 1 || ins !== 1) ? '\u00D7 ' + fmt(Wexp * ins, 2) : '\u2014';
+    document.getElementById('rTaxIns').textContent = taxInsLabel;
+
+    // Cost price
+    document.getElementById('rCostPrice').textContent = fmt(R, 3);
+
+    // Sell prices
+    document.getElementById('rMarketPriceInline').textContent = fmt(marketPrice, 2);
+    document.getElementById('rTarget20').textContent = fmt(target20, 2) + ' \u20AC/kg';
+    document.getElementById('rTarget30').textContent = fmt(target30, 2) + ' \u20AC/kg';
+    document.getElementById('rMargin20').textContent = fmtPct(margin20);
+    document.getElementById('rMargin30').textContent = fmtPct(margin30);
+    colorValue('rMargin20', margin20);
+    colorValue('rMargin30', margin30);
+
+    // Market comparison
+    document.getElementById('rCostVsMarket').textContent = fmtPct(costVsMarket);
+    colorValue('rCostVsMarket', -costVsMarket);
+
+    const vbox = document.getElementById('verdictBox');
+    const maxCostForGo = marketPrice > 0 ? marketPrice * (1 - targetMarginPct) : 0;
+    if (R > 0 && R <= maxCostForGo) {
+      vbox.textContent = 'GO';
+      vbox.className = 'verdict-box verdict-go';
+    } else if (R > 0 && marketPrice > 0 && R > marketPrice * 5) {
+      vbox.textContent = 'NO GO';
+      vbox.className = 'verdict-box verdict-nogo';
+    } else {
+      vbox.textContent = 'REVIEW';
+      vbox.className = 'verdict-box verdict-review';
+    }
+
+    document.getElementById('qT1').textContent = fmt(t1perkg) + ' \u20AC';
+    document.getElementById('qT2').textContent = fmt(t2perkg) + ' \u20AC';
+    document.getElementById('qT3').textContent = fmt(t3perkg) + ' \u20AC';
+    document.getElementById('qR').textContent = fmt(R) + ' \u20AC';
+  }
+
+  function colorValue(id, val) {
+    const el = document.getElementById(id);
+    if (val > 0.05) el.style.color = '#4ade80';
+    else if (val > -0.05) el.style.color = '#fbbf24';
+    else el.style.color = '#f87171';
+  }
+
+  function resetForm() {
+    if (!confirm('Remettre tous les champs \u00E0 z\u00E9ro ?')) return;
+    document.querySelectorAll('input[type="number"]').forEach(el => { if (!el.readOnly) el.value = ''; });
+    document.querySelectorAll('input[type="text"]').forEach(el => el.value = '');
+    document.getElementById('processYield').value = 85;
+    document.getElementById('importTax').value = 1;
+    document.getElementById('exportTax').value = 1;
+    document.getElementById('insurance').value = 1;
+    document.getElementById('targetMargin').value = 35;
+    recalc();
+  }
+
+  initDataLists();
+
+  // ═══════════════════════════════════════════════
+  // FIELD COLOR CODING — apply CSS classes by field type
+  // ═══════════════════════════════════════════════
+  const USER_FIELDS = [
+    'productName','t1Origin','t1Dest','t1Mode','t1Volume',
+    't2Origin','t2Dest','t2Mode','t3Dest','t3Client','t3Mode',
+    'rawPrice','analyses','storage','importTax','exportTax','insurance','targetMargin',
+    'outputProduct',
+  ];
+  const AUTO_EDIT_FIELDS = [
+    'productState','bulkDensity',
+    't1Distance','t1Cost','t1Transit','t1Weight',
+    't2Distance','t2Cost','t2Transit','t2Weight',
+    't3Distance','t3Cost','t3Transit','t3Weight',
+    'processedDensity','marketPrice',
+  ];
+  const AUTO_LOCK_FIELDS = ['t2Capacity'];
+
+  USER_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.closest('.form-group')?.classList.add('field-user');
+  });
+  AUTO_EDIT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.closest('.form-group')?.classList.add('field-auto-edit');
+  });
+  AUTO_LOCK_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.closest('.form-group')?.classList.add('field-auto-lock');
+  });
+
+  recalc();
+</script>
+</body>
+</html>
