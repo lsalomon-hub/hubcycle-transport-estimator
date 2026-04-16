@@ -738,10 +738,25 @@
               <div class="form-group field-auto-edit">
                 <label>Densit&eacute; brute (mati&egrave;re premi&egrave;re)</label>
                 <div class="input-wrap">
-                  <input type="number" id="bulkDensity" value="140" min="1" step="1" oninput="recalc()">
+                  <input type="number" id="bulkDensity" value="140" min="1" step="1" oninput="onDensityChange()">
                   <span class="unit-label">kg/m&sup3;</span>
                 </div>
                 <span class="hint">Utilis&eacute;e pour le Transport 1</span>
+              </div>
+              <div class="form-group field-user">
+                <label>Prix mati&egrave;re premi&egrave;re (achat fournisseur)</label>
+                <div class="input-wrap">
+                  <input type="number" id="rawPrice" value="0.10" min="0" step="0.01" oninput="recalc()">
+                  <span class="unit-label">&euro;/kg</span>
+                </div>
+              </div>
+              <div class="form-group field-auto-edit">
+                <label>Big bags empilables</label>
+                <select id="bbLayers" onchange="recalc()">
+                  <option value="1">1 couche (produit l&eacute;ger / instable)</option>
+                  <option value="2">2 couches (produit dense / stable)</option>
+                </select>
+                <span class="hint" id="bbHint">Auto : 1 couche si densit&eacute; &lt; 300 kg/m&sup3;</span>
               </div>
             </div>
           </div>
@@ -1030,13 +1045,6 @@
           </div>
           <div class="card-body">
             <div class="form-grid">
-              <div class="form-group">
-                <label>Mati&egrave;re premi&egrave;re</label>
-                <div class="input-wrap">
-                  <input type="number" id="rawPrice" value="0.10" min="0" step="0.01" oninput="recalc()">
-                  <span class="unit-label">&euro;/kg</span>
-                </div>
-              </div>
               <div class="form-group">
                 <label>Analyses</label>
                 <div class="input-wrap">
@@ -1651,6 +1659,8 @@
         if (stateEl.options[i].value === match.state) { stateEl.selectedIndex = i; break; }
       }
       hint.innerHTML = '\u2705 Densit\u00E9 ' + match.density + ' kg/m\u00B3 \u2022 Prix march\u00E9 ' + match.marketPrice.toFixed(2) + ' \u20AC/kg <span class="auto-tag">auto</span>';
+      // Auto-detect stacking layers based on density
+      onDensityChange();
     } else {
       hint.textContent = name.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle' : '';
     }
@@ -1848,26 +1858,44 @@
   // FTL truck (EU): ~86 m³, max payload 26 000 kg (tautliner)
   // Big bag: ~1 m³ each, 26 big bags in a 40'
   // ═══════════════════════════════════════════════
-  // Capacités réelles avec big bags (~1 m³/big bag)
-  // 40' container: 26 big bags, max payload 26 000 kg
-  // 20' container: 13 big bags, max payload 21 000 kg
-  // Truck FTL tautliner: 22 big bags (sol), max payload 24 000 kg
-  //   (13.6m long × 2 rangées = ~22 positions big bag au sol)
-  const CONTAINER = {
-    "40": { bigBags: 26, maxKg: 26000 },
-    "20": { bigBags: 13, maxKg: 21000 },
-    "Truck": { bigBags: 22, maxKg: 24000 },
-  };
+  // Capacités big bags
+  // Au sol : 13 big bags en 40', 11 en camion
+  // Empilés (2 couches) : 26 en 40', 22 en camion
+  // Produits légers/instables (<300 kg/m³) : 1 couche seulement
+  const BB_FLOOR = { "40": 13, "20": 7, "Truck": 11 };
+  const CONTAINER_MAX = { "40": 26000, "20": 21000, "Truck": 24000 };
+
+  function getBigBags(mode) {
+    const layers = parseInt(document.getElementById('bbLayers').value) || 1;
+    const type = (mode === 'Sea') ? '40' : 'Truck';
+    return BB_FLOOR[type] * layers;
+  }
+
+  function onDensityChange() {
+    const density = v('bulkDensity');
+    const sel = document.getElementById('bbLayers');
+    const hint = document.getElementById('bbHint');
+    if (density < 300) {
+      sel.value = '1';
+      hint.textContent = 'Auto : 1 couche (densit\u00E9 < 300 \u2192 big bags instables)';
+    } else {
+      sel.value = '2';
+      hint.textContent = 'Auto : 2 couches (densit\u00E9 \u2265 300 \u2192 big bags stables)';
+    }
+    recalc();
+  }
 
   function estimateWeight(density, mode) {
     if (density <= 0) return 0;
+    const type = (mode === 'Sea') ? '40' : 'Truck';
+    const maxKg = CONTAINER_MAX[type] || 24000;
     if (mode === 'Sea') {
-      const c = CONTAINER["40"];
-      return Math.min(c.bigBags * density, c.maxKg);
+      const bb = getBigBags(mode);
+      return Math.min(bb * density, maxKg);
     }
     if (mode === 'Road' || mode === 'Rail') {
-      const c = CONTAINER["Truck"];
-      return Math.min(c.bigBags * density, c.maxKg);
+      const bb = getBigBags(mode);
+      return Math.min(bb * density, maxKg);
     }
     if (mode === 'Air') {
       return 1000; // envoi aérien standard ~1T
@@ -1971,17 +1999,21 @@
     document.getElementById('t2Badge').textContent = fmt(t2perkg) + ' \u20AC/kg';
     document.getElementById('t3Badge').textContent = fmt(t3perkg) + ' \u20AC/kg';
 
-    // T1 capacity uses raw/bulk density
+    // T1 capacity uses raw/bulk density + stacking layers
     const rawDensity = v('bulkDensity');
+    const layers = parseInt(document.getElementById('bbLayers').value) || 1;
     if (rawDensity > 0) {
-      const bigBags = 26, totalKg = bigBags * rawDensity;
+      const bbSea = BB_FLOOR["40"] * layers;
+      const totalKg = bbSea * rawDensity;
+      const layerTxt = layers === 1 ? '1 couche' : '2 couches';
       document.getElementById('t1CapInfo').textContent =
-        `40' container \u2014 ${bigBags} big bags \u00D7 ${rawDensity} kg/bb = ${totalKg.toLocaleString('fr-FR')} kg (densit\u00E9 brute)`;
+        `40' container \u2014 ${bbSea} big bags (${layerTxt}) \u00D7 ${rawDensity} kg/bb = ${totalKg.toLocaleString('fr-FR')} kg`;
     }
-    // T2 capacity uses processed density
+    // T2 capacity uses processed density + stacking layers
     const procDensity = v('processedDensity');
     if (procDensity > 0) {
-      const cap = Math.round(procDensity * 22.1);
+      const bbTruck = BB_FLOOR["Truck"] * layers;
+      const cap = Math.min(bbTruck * procDensity, CONTAINER_MAX["Truck"]);
       document.getElementById('t2Capacity').value = cap;
     }
 
@@ -2080,7 +2112,7 @@
   const USER_FIELDS = [
     'productName','t1Origin','t1Dest','t1Mode','t1Volume',
     't2Origin','t2Dest','t2Mode','t3Dest','t3Client','t3Mode',
-    'rawPrice','analyses','storage','importTax','exportTax','insurance','targetMargin',
+    'analyses','storage','importTax','exportTax','insurance','targetMargin',
     'outputProduct',
   ];
   const AUTO_EDIT_FIELDS = [
