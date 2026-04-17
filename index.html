@@ -757,6 +757,22 @@
                 </div>
                 <span class="hint">Taux EUR/USD : <input type="number" id="eurUsdRate" value="1.08" min="0.5" max="2" step="0.01" style="width:55px;padding:.15rem .3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.75rem;text-align:center" oninput="recalc()"> <span id="eurUsdStatus" style="color:var(--text-dim)">(chargement...)</span></span>
               </div>
+              <div class="form-group field-user">
+                <label>Incoterm d'achat</label>
+                <select id="t1Incoterm" onchange="recalc()">
+                  <option value="EXW" selected>EXW &mdash; D&eacute;part usine (Hubcycle paye tout T1)</option>
+                  <option value="FCA">FCA &mdash; Free Carrier (Hubcycle paye fret)</option>
+                  <option value="FOB">FOB &mdash; Free On Board (Hubcycle paye sea freight)</option>
+                  <option value="CFR">CFR &mdash; Cost and Freight (fournisseur paye fret)</option>
+                  <option value="CIF">CIF &mdash; Cost Insurance Freight (fournisseur paye fret+assu)</option>
+                  <option value="CPT">CPT &mdash; Carriage Paid To (fournisseur paye fret)</option>
+                  <option value="CIP">CIP &mdash; Carriage Insurance Paid (fournisseur paye tout)</option>
+                  <option value="DAP">DAP &mdash; Delivered at Place (fournisseur livre)</option>
+                  <option value="DPU">DPU &mdash; Delivered Place Unloaded (livr&eacute; + d&eacute;charg&eacute;)</option>
+                  <option value="DDP">DDP &mdash; Delivered Duty Paid (tout inclus)</option>
+                </select>
+                <span class="hint" id="t1IncotermHint">D&eacute;finit ce qui est d&eacute;j&agrave; inclus dans le prix fournisseur</span>
+              </div>
               <div class="form-group field-auto-edit">
                 <label>Big bags empilables</label>
                 <select id="bbLayers" onchange="recalc()">
@@ -778,22 +794,6 @@
           </div>
           <div class="card-body">
             <div class="form-grid">
-              <div class="form-group">
-                <label>Incoterm achat</label>
-                <select id="t1Incoterm" onchange="recalc()">
-                  <option value="EXW" selected>EXW &mdash; D&eacute;part usine (Hubcycle paye tout)</option>
-                  <option value="FCA">FCA &mdash; Free Carrier (Hubcycle paye fret)</option>
-                  <option value="FOB">FOB &mdash; Free On Board (Hubcycle paye sea freight)</option>
-                  <option value="CFR">CFR &mdash; Cost and Freight (fournisseur paye fret)</option>
-                  <option value="CIF">CIF &mdash; Cost Insurance Freight (fournisseur paye tout jusqu'au port)</option>
-                  <option value="CPT">CPT &mdash; Carriage Paid To (fournisseur paye fret)</option>
-                  <option value="CIP">CIP &mdash; Carriage Insurance Paid (fournisseur paye tout)</option>
-                  <option value="DAP">DAP &mdash; Delivered at Place (fournisseur livre)</option>
-                  <option value="DPU">DPU &mdash; Delivered Place Unloaded (fournisseur livre+d&eacute;charge)</option>
-                  <option value="DDP">DDP &mdash; Delivered Duty Paid (fournisseur paye tout)</option>
-                </select>
-                <span class="hint" id="t1IncotermHint">T1 &agrave; la charge de Hubcycle</span>
-              </div>
               <div class="form-group">
                 <label>Pays d'origine</label>
                 <input type="text" id="t1Origin" list="countryList" value="India" oninput="onRouteChange('t1')" onchange="onRouteChange('t1')">
