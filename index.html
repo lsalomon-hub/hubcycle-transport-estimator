@@ -1009,7 +1009,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Incoterm vente</label>
-                <select id="t3Incoterm" onchange="recalc()">
+                <select id="t3Incoterm" onchange="onRouteChange('t3')">
                   <option value="EXW">EXW &mdash; Client enl&egrave;ve chez nous</option>
                   <option value="FCA">FCA &mdash; Client paye le fret</option>
                   <option value="FOB">FOB &mdash; Client paye sea freight</option>
@@ -1906,11 +1906,35 @@
   // Export duty multipliers (usually 0 except for a few countries)
   const EXPORT_DUTY = {
     // Most countries: 0% export duty on food co-products
-    // Notable exceptions for some raw materials
     "India": 1.00, "Indonesia": 1.00, "Vietnam": 1.00,
     "Sri Lanka": 1.00, "Madagascar": 1.00,
-    // EU exports: 0%
   };
+
+  // Import duty from EU → destination country (for DDP sales)
+  // Food co-products average MFN tariff into destination country
+  const DEST_IMPORT_DUTY = {
+    // Free trade agreements with EU — 0%
+    "United Kingdom": 1.00, "UK": 1.00,
+    "Switzerland": 1.00, "Norway": 1.00, "Iceland": 1.00,
+    "Canada": 1.00, "Japan": 1.00, "South Korea": 1.00,
+    "Singapore": 1.00, "Vietnam": 1.00, "Mexico": 1.00,
+    "Chile": 1.00, "Peru": 1.00, "Colombia": 1.00, "Ecuador": 1.00,
+    "Morocco": 1.00, "Tunisia": 1.00, "Egypt": 1.00,
+    "Israel": 1.00, "Turkey": 1.00, "Ukraine": 1.00,
+    // MFN — applied duties
+    "USA": 1.05, "United States": 1.05,
+    "Australia": 1.05, "New Zealand": 1.05,
+    "China": 1.10, "India": 1.15, "Brazil": 1.10,
+    "Russia": 1.12, "Russian Federation": 1.12,
+    "United Arab Emirates": 1.05, "Saudi Arabia": 1.05,
+    "Thailand": 1.10, "Philippines": 1.10, "Indonesia": 1.10,
+    "South Africa": 1.08,
+  };
+
+  function getDestImportDuty(dest) {
+    if (EU_COUNTRIES.has(dest)) return 1.00;
+    return DEST_IMPORT_DUTY[dest] || DEST_IMPORT_DUTY[norm(dest)] || 1.08;
+  }
 
   function getImportDuty(origin, dest) {
     // Intra-EU: 0%
@@ -2041,10 +2065,15 @@
       document.getElementById('importTax').value = getImportDuty(origin, dest).toFixed(2);
     }
     if (prefix === 't3') {
-      // T3: export duty based on departure (France) and import duty based on client country if outside EU
-      // Since origin for T3 is usually France (EU), export = 1.00
-      // If client is outside EU, the buyer pays import duty — but it can affect our quote
-      document.getElementById('exportTax').value = getExportDuty('France').toFixed(2);
+      // T3 logic depends on Incoterm:
+      // - DDP: Hubcycle pays destination import duties → add them to exportTax
+      // - Other Incoterms: export = 1.00 (EU has 0% export duty, client pays import)
+      const t3Inco = document.getElementById('t3Incoterm').value;
+      if (t3Inco === 'DDP') {
+        document.getElementById('exportTax').value = getDestImportDuty(dest).toFixed(2);
+      } else {
+        document.getElementById('exportTax').value = '1.00';
+      }
     }
 
     // 3. Auto-fill freight cost & transit
