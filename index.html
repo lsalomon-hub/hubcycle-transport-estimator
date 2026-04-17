@@ -779,6 +779,22 @@
           <div class="card-body">
             <div class="form-grid">
               <div class="form-group">
+                <label>Incoterm achat</label>
+                <select id="t1Incoterm" onchange="recalc()">
+                  <option value="EXW" selected>EXW &mdash; D&eacute;part usine (Hubcycle paye tout)</option>
+                  <option value="FCA">FCA &mdash; Free Carrier (Hubcycle paye fret)</option>
+                  <option value="FOB">FOB &mdash; Free On Board (Hubcycle paye sea freight)</option>
+                  <option value="CFR">CFR &mdash; Cost and Freight (fournisseur paye fret)</option>
+                  <option value="CIF">CIF &mdash; Cost Insurance Freight (fournisseur paye tout jusqu'au port)</option>
+                  <option value="CPT">CPT &mdash; Carriage Paid To (fournisseur paye fret)</option>
+                  <option value="CIP">CIP &mdash; Carriage Insurance Paid (fournisseur paye tout)</option>
+                  <option value="DAP">DAP &mdash; Delivered at Place (fournisseur livre)</option>
+                  <option value="DPU">DPU &mdash; Delivered Place Unloaded (fournisseur livre+d&eacute;charge)</option>
+                  <option value="DDP">DDP &mdash; Delivered Duty Paid (fournisseur paye tout)</option>
+                </select>
+                <span class="hint" id="t1IncotermHint">T1 &agrave; la charge de Hubcycle</span>
+              </div>
+              <div class="form-group">
                 <label>Pays d'origine</label>
                 <input type="text" id="t1Origin" list="countryList" value="India" oninput="onRouteChange('t1')" onchange="onRouteChange('t1')">
               </div>
@@ -991,6 +1007,22 @@
           </div>
           <div class="card-body">
             <div class="form-grid">
+              <div class="form-group">
+                <label>Incoterm vente</label>
+                <select id="t3Incoterm" onchange="recalc()">
+                  <option value="EXW">EXW &mdash; Client enl&egrave;ve chez nous</option>
+                  <option value="FCA">FCA &mdash; Client paye le fret</option>
+                  <option value="FOB">FOB &mdash; Client paye sea freight</option>
+                  <option value="CFR">CFR &mdash; Hubcycle paye fret</option>
+                  <option value="CIF">CIF &mdash; Hubcycle paye fret + assurance</option>
+                  <option value="CPT">CPT &mdash; Hubcycle paye fret</option>
+                  <option value="CIP">CIP &mdash; Hubcycle paye fret + assurance</option>
+                  <option value="DAP" selected>DAP &mdash; Hubcycle livre chez le client</option>
+                  <option value="DPU">DPU &mdash; Hubcycle livre + d&eacute;charge</option>
+                  <option value="DDP">DDP &mdash; Hubcycle paye tout (taxes incluses)</option>
+                </select>
+                <span class="hint" id="t3IncotermHint">T3 &agrave; la charge de Hubcycle</span>
+              </div>
               <div class="form-group">
                 <label>Pays du client</label>
                 <input type="text" id="t3Dest" list="countryList" value="Germany" oninput="onRouteChange('t3')" onchange="onRouteChange('t3')">
@@ -2033,9 +2065,30 @@
     const storage = v('storage'), Wexp = v('exportTax'), ins = v('insurance');
     const marketPrice = v('marketPrice'), targetMarginPct = v('targetMargin') / 100;
 
+    // ─── INCOTERMS: determine if T1/T3 costs are borne by Hubcycle ───
+    // T1 (purchase): Hubcycle pays T1 only for EXW, FCA, FOB, FAS
+    // Otherwise supplier pays → T1 already in RM price, exclude from calc
+    const t1Incoterm = document.getElementById('t1Incoterm').value;
+    const t1HubPays = ['EXW','FCA','FOB','FAS'].includes(t1Incoterm);
+    const t1Effective = t1HubPays ? t1perkg : 0;
+
+    // T3 (sale): Hubcycle pays T3 only for CFR, CIF, CPT, CIP, DAP, DPU, DDP
+    // EXW/FCA/FOB/FAS → customer pays, exclude T3
+    const t3Incoterm = document.getElementById('t3Incoterm').value;
+    const t3HubPays = ['CFR','CIF','CPT','CIP','DAP','DPU','DDP'].includes(t3Incoterm);
+    const t3Effective = t3HubPays ? t3perkg : 0;
+
+    // Update Incoterm hints
+    document.getElementById('t1IncotermHint').innerHTML = t1HubPays
+      ? '<span style="color:var(--amber-400)">\u25CF T1 inclus dans le co\u00FBt (Hubcycle paye)</span>'
+      : '<span style="color:var(--green-400)">\u25CF T1 exclu (fournisseur paye, d\u00E9j\u00E0 dans RM)</span>';
+    document.getElementById('t3IncotermHint').innerHTML = t3HubPays
+      ? '<span style="color:var(--amber-400)">\u25CF T3 inclus dans le co\u00FBt (Hubcycle paye)</span>'
+      : '<span style="color:var(--green-400)">\u25CF T3 exclu (client paye)</span>';
+
     let R = 0;
     if (yieldPct > 0) {
-      R = (((RM * Wimp) + analysis + t1perkg + manuf) * (1 / yieldPct) + storage + t2perkg + t3perkg) * Wexp * ins;
+      R = (((RM * Wimp) + analysis + t1Effective + manuf) * (1 / yieldPct) + storage + t2perkg + t3Effective) * Wexp * ins;
     }
 
     const target20 = marketPrice * 0.80;
@@ -2046,11 +2099,12 @@
     const minSell = targetMarginPct < 1 ? R / (1 - targetMarginPct) : 0;
     const gapVsMarket = marketPrice > 0 ? (marketPrice - minSell) / marketPrice : 0;
 
-    // Transport section
-    document.getElementById('rT1').textContent = fmt(t1perkg) + ' \u20AC';
+    // Transport section — show effective (0 if excluded by Incoterm)
+    const totalEffectiveTransport = t1Effective + t2perkg + t3Effective;
+    document.getElementById('rT1').textContent = fmt(t1Effective) + ' \u20AC' + (t1HubPays ? '' : ' (excl.)');
     document.getElementById('rT2').textContent = fmt(t2perkg) + ' \u20AC';
-    document.getElementById('rT3').textContent = fmt(t3perkg) + ' \u20AC';
-    document.getElementById('rTotalTransport').textContent = fmt(totalTransport) + ' \u20AC';
+    document.getElementById('rT3').textContent = fmt(t3Effective) + ' \u20AC' + (t3HubPays ? '' : ' (excl.)');
+    document.getElementById('rTotalTransport').textContent = fmt(totalEffectiveTransport) + ' \u20AC';
 
     // Other costs section
     document.getElementById('rRM').textContent = fmt(RM * Wimp) + ' \u20AC';
