@@ -1207,6 +1207,13 @@
               </div>
             </div>
 
+            <!-- ── PRIX MARCHE DE REFERENCE ── -->
+            <div class="section-box" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);text-align:center;padding:.75rem">
+              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-400);margin-bottom:.15rem">Prix march&eacute; standard</div>
+              <div style="font-size:1.4rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums"><span id="rMarketPriceDisplay">&mdash;</span> &euro;/kg</div>
+              <div style="font-size:.68rem;color:var(--text-dim);margin-top:.1rem" id="rMarketPriceProduct">(produit de sortie)</div>
+            </div>
+
             <!-- ── PRIX DE VENTE PROPOSES ── -->
             <div class="section-box section-sell">
               <div class="stitle">Prix de vente propos&eacute;s vs march&eacute; (<span id="rMarketPriceInline">&mdash;</span> &euro;/kg)</div>
@@ -1860,6 +1867,67 @@
     return Math.round(straight / 100) * 100;
   }
 
+  // ═══════════════════════════════════════════════
+  // IMPORT/EXPORT DUTIES — EU perspective for food co-products
+  // Multiplier = 1 + duty rate
+  // Sources: EU TARIC, GSP/GSP+/EBA schemes, trade agreements
+  // ═══════════════════════════════════════════════
+  const EU_COUNTRIES = new Set([
+    "France","Germany","Belgium","Netherlands","Spain","Italy","Portugal",
+    "Austria","Poland","Czech Republic","Slovakia","Hungary","Slovenia","Croatia",
+    "Denmark","Sweden","Finland","Ireland","Greece","Luxembourg","Monaco",
+    "Estonia","Latvia","Lithuania","Bulgaria","Romania","Cyprus","Malta","San Marino"
+  ]);
+
+  // Import duty multipliers into the EU (food co-products average)
+  const IMPORT_DUTY = {
+    // GSP / GSP+ / EBA — zero or very low duties
+    "India": 1.00, "Indonesia": 1.00, "Vietnam": 1.00, "Sri Lanka": 1.00,
+    "Cambodia": 1.00, "Philippines": 1.00, "Pakistan": 1.00, "Bangladesh": 1.00,
+    "Madagascar": 1.00, "São Tomé and Príncipe": 1.00,
+    // ACP / EPA agreements — 0% most products
+    "Senegal": 1.00, "Ivory Coast": 1.00, "Ghana": 1.00, "Kenya": 1.00,
+    "Tanzania": 1.00, "Ethiopia": 1.00, "South Africa": 1.00, "Mauritius": 1.00,
+    // Trade agreements (FTA/DCFTA)
+    "Morocco": 1.00, "Tunisia": 1.00, "Egypt": 1.00, "Turkey": 1.00,
+    "Georgia": 1.00, "Ukraine": 1.00, "Peru": 1.00, "Colombia": 1.00,
+    "Ecuador": 1.00, "Mexico": 1.00, "Chile": 1.00, "Canada": 1.00,
+    "Japan": 1.00, "South Korea": 1.00, "Singapore": 1.00,
+    "UK": 1.00, "United Kingdom": 1.00, "Switzerland": 1.00, "Norway": 1.00,
+    "Israel": 1.00,
+    // MFN (no trade agreement) — avg 3-5% for food co-products
+    "Brazil": 1.03, "Guatemala": 1.03, "Nicaragua": 1.03,
+    "USA": 1.05, "United States": 1.05, "Australia": 1.03, "New Zealand": 1.03,
+    "China": 1.05, "Thailand": 1.03, "Malaysia": 1.03,
+    "Russia": 1.08, "Russian Federation": 1.08,
+    "United Arab Emirates": 1.03,
+  };
+
+  // Export duty multipliers (usually 0 except for a few countries)
+  const EXPORT_DUTY = {
+    // Most countries: 0% export duty on food co-products
+    // Notable exceptions for some raw materials
+    "India": 1.00, "Indonesia": 1.00, "Vietnam": 1.00,
+    "Sri Lanka": 1.00, "Madagascar": 1.00,
+    // EU exports: 0%
+  };
+
+  function getImportDuty(origin, dest) {
+    // Intra-EU: 0%
+    if (EU_COUNTRIES.has(origin) && EU_COUNTRIES.has(dest)) return 1.00;
+    // Non-EU to EU: look up duty
+    if (EU_COUNTRIES.has(dest)) {
+      return IMPORT_DUTY[origin] || IMPORT_DUTY[norm(origin)] || 1.05;
+    }
+    // EU to non-EU: depends on destination, default 1.00
+    return 1.00;
+  }
+
+  function getExportDuty(origin) {
+    if (EU_COUNTRIES.has(origin)) return 1.00;
+    return EXPORT_DUTY[origin] || EXPORT_DUTY[norm(origin)] || 1.00;
+  }
+
   function lookupDistance(origin, dest, mode) {
     // 1. Try exact lookup from xlsx data
     if (mode === 'Road' || mode === 'Rail') {
@@ -1965,6 +2033,18 @@
     const density = v(densityField);
     if (density > 0) {
       weightEl.value = estimateWeight(density, mode);
+    }
+
+    // 2bis. Auto-fill import/export duties based on countries
+    if (prefix === 't1') {
+      // T1: import duty = origin → destination (usually to EU/France)
+      document.getElementById('importTax').value = getImportDuty(origin, dest).toFixed(2);
+    }
+    if (prefix === 't3') {
+      // T3: export duty based on departure (France) and import duty based on client country if outside EU
+      // Since origin for T3 is usually France (EU), export = 1.00
+      // If client is outside EU, the buyer pays import duty — but it can affect our quote
+      document.getElementById('exportTax').value = getExportDuty('France').toFixed(2);
     }
 
     // 3. Auto-fill freight cost & transit
@@ -2120,6 +2200,10 @@
 
     // Sell prices
     document.getElementById('rMarketPriceInline').textContent = fmt(marketPrice, 2);
+    document.getElementById('rMarketPriceDisplay').textContent = fmt(marketPrice, 2);
+    const outProd = document.getElementById('outputProduct').value.trim();
+    const inProd = document.getElementById('productName').value.trim();
+    document.getElementById('rMarketPriceProduct').textContent = outProd ? '(' + outProd + ')' : (inProd ? '(' + inProd + ')' : '(produit)');
     document.getElementById('rTarget20').textContent = fmt(target20, 2) + ' \u20AC/kg';
     document.getElementById('rTarget30').textContent = fmt(target30, 2) + ' \u20AC/kg';
     document.getElementById('rMargin20').textContent = fmtPct(margin20);
