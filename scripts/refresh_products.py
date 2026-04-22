@@ -89,16 +89,32 @@ def main() -> int:
 
     by_cat = {}
     match_count = 0
+    supplier_count = 0
     for p in odoo_products:
         name = (p.get("name") or "").strip()
         code = (p.get("default_code") or "").strip()
         if not name or not code:
             continue
+        # Primary purchase price: first supplier (by sequence) from supplier_info.
+        # Fall back to standard_price (Odoo cost field) if no supplier is set.
+        supplier_price = p.get("supplier_price")
+        standard_price = p.get("standard_price")
+        if supplier_price is not None:
+            price = round(float(supplier_price), 4)
+            price_source = "supplier"
+            supplier_count += 1
+        else:
+            price = round(float(standard_price or 0), 4)
+            price_source = "standard"
         entry = {
             "code": code,
             "name": name,
-            "price": round(float(p.get("standard_price") or 0), 4),
+            "price": price,
+            "priceSource": price_source,
         }
+        supplier_name = p.get("supplier_name")
+        if supplier_name:
+            entry["supplier"] = supplier_name
         mname = best_match(name, curated)
         if mname:
             entry["density"] = curated[mname]["density"]
@@ -119,12 +135,14 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "total_products": sum(len(v) for v in by_cat.values()),
         "matched_density": match_count,
+        "with_supplier_price": supplier_count,
         "categories": {cat: by_cat[cat] for cat in ordered},
     }
     OUT_JSON.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
 
     print(f"Wrote {OUT_JSON.relative_to(REPO)} ({OUT_JSON.stat().st_size} bytes)")
     print(f"Matched {match_count}/{payload['total_products']} products with curated density")
+    print(f"Supplier prices: {supplier_count}/{payload['total_products']} from supplier_info (rest = standard_price)")
     return 0
 
 

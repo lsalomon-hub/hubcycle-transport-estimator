@@ -5,12 +5,22 @@
 #   Ask Claude Code (with the hubcycle-db MCP) to run this SQL and save
 #   the result as /tmp/odoo_products.json:
 #
-#     SELECT default_code, name, categ_name,
-#            COALESCE(standard_price, 0) AS standard_price
-#     FROM product_templates
-#     WHERE is_active = true AND categ_name != 'Service'
-#       AND default_code IS NOT NULL AND default_code != ''
-#     ORDER BY categ_name, name;
+#     WITH primary_supplier AS (
+#       SELECT DISTINCT ON (si.template_odoo_id)
+#         si.template_odoo_id, si.price AS supplier_price,
+#         si.min_qty, p.name AS supplier_name
+#       FROM supplier_info si
+#       LEFT JOIN partners p ON p.odoo_id = si.partner_odoo_id
+#       ORDER BY si.template_odoo_id, si.sequence ASC
+#     )
+#     SELECT pt.default_code, pt.name, pt.categ_name,
+#            COALESCE(pt.standard_price, 0) AS standard_price,
+#            ps.supplier_price, ps.supplier_name, ps.min_qty
+#     FROM product_templates pt
+#     LEFT JOIN primary_supplier ps ON ps.template_odoo_id = pt.odoo_id
+#     WHERE pt.is_active = true AND pt.categ_name != 'Service'
+#       AND pt.default_code IS NOT NULL AND pt.default_code != ''
+#     ORDER BY pt.categ_name, pt.name;
 #
 # Then run this script.
 

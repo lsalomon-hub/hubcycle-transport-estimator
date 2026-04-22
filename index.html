@@ -1891,9 +1891,15 @@
       } else {
         densityMsg = ' \u2022 Densit\u00E9 non r\u00E9f\u00E9renc\u00E9e (saisie manuelle)';
       }
-      const priceMsg = odoo.price > 0
-        ? 'Prix achat Odoo ' + odoo.price.toFixed(2) + ' \u20AC/kg'
-        : 'Pas de prix Odoo (standard_price = 0)';
+      let priceMsg;
+      if (odoo.price > 0) {
+        const src = odoo.priceSource === 'supplier'
+          ? (odoo.supplier ? 'fournisseur: ' + odoo.supplier : 'fournisseur princ.')
+          : 'co\u00FBt Odoo (pas de fournisseur)';
+        priceMsg = 'Prix achat ' + odoo.price.toFixed(2) + ' \u20AC/kg (' + src + ')';
+      } else {
+        priceMsg = 'Pas de prix Odoo';
+      }
       hint.innerHTML = '\u2705 ' + odoo.code + ' \u00B7 ' + odoo.category + ' \u2022 ' + priceMsg + densityMsg + ' <span class="auto-tag">auto</span>';
       onDensityChange();
     } else {
