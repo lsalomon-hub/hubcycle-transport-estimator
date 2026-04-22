@@ -669,6 +669,24 @@
       color: #fca5a5;
       border-color: rgba(239,68,68,.3);
     }
+    .odoo-status { display: flex; align-items: center; gap: .6rem; justify-content: space-between; flex-wrap: wrap; }
+    .odoo-status .odoo-status-text { flex: 1; min-width: 200px; }
+    .odoo-refresh-btn {
+      font-family: inherit;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .3rem .6rem;
+      border-radius: 5px;
+      background: rgba(148,163,184,.15);
+      color: var(--text);
+      border: 1px solid rgba(148,163,184,.3);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+    }
+    .odoo-refresh-btn:hover { background: rgba(148,163,184,.25); }
+    .odoo-refresh-btn:disabled { opacity: .5; cursor: wait; }
 
     /* Colors for values */
     .c-green { color: var(--green-400) !important; }
@@ -751,7 +769,10 @@
           </div>
         </div>
 
-        <div class="odoo-status" id="odooStatus">Chargement des produits Odoo&hellip;</div>
+        <div class="odoo-status" id="odooStatus">
+          <span class="odoo-status-text" id="odooStatusText">Chargement des produits Odoo&hellip;</span>
+          <button class="odoo-refresh-btn" id="odooRefreshBtn" onclick="manualRefresh()" title="Recharger products.json depuis le serveur">&#x21bb; Rafra&icirc;chir</button>
+        </div>
 
         <!-- PRODUCT -->
         <div class="card">
@@ -1801,6 +1822,7 @@
 
   async function loadOdooProducts() {
     const statusEl = document.getElementById('odooStatus');
+    const textEl = document.getElementById('odooStatusText');
     try {
       const url = 'products.json?v=' + Date.now();
       const res = await fetch(url, {cache: 'no-store'});
@@ -1811,20 +1833,28 @@
       const generatedAt = data.generated_at ? new Date(data.generated_at) : null;
       const total = data.total_products || 0;
       rebuildProductDataList();
-      if (statusEl) {
+      if (textEl) {
         const when = generatedAt ? generatedAt.toLocaleString('fr-FR') : '?';
-        statusEl.innerHTML = '\u2705 ' + total + ' produits Odoo \u2022 g\u00E9n\u00E9r\u00E9 le ' + when + ' \u2022 prochain refresh auto dans 15 min';
-        statusEl.className = 'odoo-status ok';
+        textEl.innerHTML = '\u2705 ' + total + ' produits Odoo \u2022 g\u00E9n\u00E9r\u00E9 le ' + when;
       }
+      if (statusEl) statusEl.className = 'odoo-status ok';
       return true;
     } catch (e) {
       console.error('Failed to load products.json', e);
-      if (statusEl) {
-        statusEl.innerHTML = '\u26A0\uFE0F Impossible de charger products.json (' + e.message + ')';
-        statusEl.className = 'odoo-status err';
-      }
+      if (textEl) textEl.innerHTML = '\u26A0\uFE0F Impossible de charger products.json (' + e.message + ')';
+      if (statusEl) statusEl.className = 'odoo-status err';
       return false;
     }
+  }
+
+  async function manualRefresh() {
+    const btn = document.getElementById('odooRefreshBtn');
+    const textEl = document.getElementById('odooStatusText');
+    if (btn) btn.disabled = true;
+    const prev = textEl ? textEl.innerHTML : '';
+    if (textEl) textEl.innerHTML = '\u21bb Rafra\u00EEchissement\u2026';
+    try { await loadOdooProducts(); }
+    finally { if (btn) btn.disabled = false; }
   }
 
   function startOdooRefreshLoop() {
