@@ -1456,8 +1456,8 @@
     "Coriander powder":          { density: 425, marketPrice: 2.20, state: "Dry" },
     // ── CARDAMOM ────────────────────────────────────
     "Cardamom whole":            { density: 450, marketPrice: 20.00, state: "Dry" },
-    "Cardamom husks":            { density: 150, marketPrice: 0.80, state: "Dry" },
-    "Cardamom powder":           { density: 425, marketPrice: 18.00, state: "Dry" },
+    "Cardamom husks":            { density: 150, marketPrice: 7.25, state: "Dry" },
+    "Cardamom powder":           { density: 425, marketPrice: 12.00, state: "Dry" },
     "Cardamom fines":            { density: 380, marketPrice: 5.00, state: "Dry" },
     // ── OTHER SPICES ────────────────────────────────
     "Turmeric whole":            { density: 500, marketPrice: 2.00, state: "Dry" },
@@ -2038,18 +2038,38 @@
 
     if (odoo) {
       setSkuBadge('outputSku', odoo.code);
-      const curated = odoo.density != null
-        ? {density: odoo.density, state: odoo.state, marketPrice: null}
+      // Density/state: from Odoo's matched curated entry if available, else name lookup
+      const densityRef = odoo.density != null
+        ? {density: odoo.density, state: odoo.state}
         : lookupCuratedDensity(odoo.name);
-      if (curated && curated.density) {
-        document.getElementById('processedDensity').value = curated.density;
+      if (densityRef && densityRef.density) {
+        document.getElementById('processedDensity').value = densityRef.density;
       }
-      // Prix march\u00E9 = prix achat Odoo (dans un 1er temps, en attendant list_price ou autre)
-      if (odoo.price > 0) {
-        document.getElementById('marketPrice').value = odoo.price;
+      // Market price: prefer curated reference (real sell-side benchmark),
+      // fall back to name-lookup, then Odoo purchase price.
+      let marketPrice = null, marketSource = '';
+      let curatedMatch = null;
+      if (odoo.matchedTo && PRODUCTS[odoo.matchedTo]) {
+        curatedMatch = {name: odoo.matchedTo, ref: PRODUCTS[odoo.matchedTo]};
+      } else {
+        const byName = lookupCuratedDensity(odoo.name);
+        if (byName && byName.marketPrice != null) {
+          const foundName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === byName);
+          curatedMatch = {name: foundName || odoo.name, ref: byName};
+        }
       }
-      const densityTxt = curated && curated.density ? ' \u2022 Densit\u00E9 ' + curated.density + ' kg/m\u00B3' : '';
-      const priceTxt = odoo.price > 0 ? 'Prix Odoo ' + odoo.price.toFixed(2) + ' \u20AC/kg' : 'Pas de prix Odoo';
+      if (curatedMatch) {
+        marketPrice = curatedMatch.ref.marketPrice;
+        marketSource = ' (r\u00E9f\u00E9rence ' + curatedMatch.name + ')';
+      } else if (odoo.price > 0) {
+        marketPrice = odoo.price;
+        marketSource = ' (prix achat Odoo)';
+      }
+      if (marketPrice != null) {
+        document.getElementById('marketPrice').value = marketPrice;
+      }
+      const densityTxt = densityRef && densityRef.density ? ' \u2022 Densit\u00E9 ' + densityRef.density + ' kg/m\u00B3' : '';
+      const priceTxt = marketPrice != null ? 'Prix march\u00E9 ' + marketPrice.toFixed(2) + ' \u20AC/kg' + marketSource : 'Pas de prix r\u00E9f\u00E9rence';
       hint.innerHTML = '\u2705 ' + odoo.code + ' \u00B7 ' + priceTxt + densityTxt + ' <span class="auto-tag">auto</span>';
     } else {
       setSkuBadge('outputSku', null);

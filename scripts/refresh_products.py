@@ -37,7 +37,13 @@ def extract_curated(html_text: str) -> dict:
 
 def tokens(s: str) -> set:
     s = re.sub(r"[^a-z0-9]+", " ", s.lower())
-    return set(s.split())
+    out = set()
+    for w in s.split():
+        out.add(w)
+        # Also add singular form so "husk" matches "husks", "shell" matches "shells"
+        if len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
+            out.add(w[:-1])
+    return out
 
 
 STOP = {"the","a","of","and","with","for","en","de","la","le","grade","quality","extract","extraction"}
