@@ -1456,9 +1456,9 @@
     "Coriander powder":          { density: 425, marketPrice: 2.20, state: "Dry" },
     // ── CARDAMOM ────────────────────────────────────
     "Cardamom whole":            { density: 450, marketPrice: 22.00, state: "Dry" },
-    "Cardamom husks":            { density: 150, marketPrice: 22.00, state: "Dry" },
-    "Cardamom powder":           { density: 425, marketPrice: 28.00, state: "Dry" },
-    "Cardamom fines":            { density: 380, marketPrice: 18.00, state: "Dry" },
+    "Cardamom husks":            { density: 150, marketPrice: 13.00, state: "Dry" },
+    "Cardamom powder":           { density: 425, marketPrice: 18.00, state: "Dry" },
+    "Cardamom fines":            { density: 380, marketPrice: 12.00, state: "Dry" },
     // ── OTHER SPICES ────────────────────────────────
     "Turmeric whole":            { density: 500, marketPrice: 2.00, state: "Dry" },
     "Turmeric (powder)":         { density: 625, marketPrice: 2.80, state: "Dry" },
@@ -1552,7 +1552,7 @@
     "Chili powder HT":           { density: 475, marketPrice: 3.50, state: "Dry" },
     "Nutmeg powder HT":          { density: 475, marketPrice: 7.50, state: "Dry" },
     "Clove powder HT":           { density: 575, marketPrice: 10.00, state: "Dry" },
-    "Cardamom powder HT":        { density: 425, marketPrice: 32.00, state: "Dry" },
+    "Cardamom powder HT":        { density: 425, marketPrice: 18.00, state: "Dry" },
     "Allspice powder HT":        { density: 475, marketPrice: 4.30, state: "Dry" },
     "Fenugreek powder HT":       { density: 500, marketPrice: 3.20, state: "Dry" },
     "Basil powder HT":           { density: 350, marketPrice: 6.50, state: "Dry" },
@@ -1748,6 +1748,15 @@
   function odooDatalistValue(entry) {
     return entry.name + ' (' + entry.code + ')';
   }
+
+  // ═══════════════════════════════════════════════
+  // SKU-specific market price overrides
+  // Used when a specific Odoo SKU has a distinct market price from the
+  // curated category default (e.g. high-VO premium products).
+  // ═══════════════════════════════════════════════
+  const CURATED_SKU_OVERRIDES = {
+    'D397X': { marketPrice: 28.00, note: 'Cardamom Powder premium high-VO' },
+  };
 
   function pickAltPrice(event, price) {
     event.preventDefault();
@@ -2045,25 +2054,34 @@
       if (densityRef && densityRef.density) {
         document.getElementById('processedDensity').value = densityRef.density;
       }
-      // Market price: prefer curated reference (real sell-side benchmark),
-      // fall back to name-lookup, then Odoo purchase price.
+      // Market price resolution order:
+      //  1) SKU-specific override (e.g. premium high-VO products)
+      //  2) Curated category match (via odoo.matchedTo)
+      //  3) Name-based curated fallback
+      //  4) Odoo purchase price
       let marketPrice = null, marketSource = '';
-      let curatedMatch = null;
-      if (odoo.matchedTo && PRODUCTS[odoo.matchedTo]) {
-        curatedMatch = {name: odoo.matchedTo, ref: PRODUCTS[odoo.matchedTo]};
+      const skuOverride = CURATED_SKU_OVERRIDES[odoo.code.toUpperCase()];
+      if (skuOverride) {
+        marketPrice = skuOverride.marketPrice;
+        marketSource = ' (override ' + odoo.code + (skuOverride.note ? ': ' + skuOverride.note : '') + ')';
       } else {
-        const byName = lookupCuratedDensity(odoo.name);
-        if (byName && byName.marketPrice != null) {
-          const foundName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === byName);
-          curatedMatch = {name: foundName || odoo.name, ref: byName};
+        let curatedMatch = null;
+        if (odoo.matchedTo && PRODUCTS[odoo.matchedTo]) {
+          curatedMatch = {name: odoo.matchedTo, ref: PRODUCTS[odoo.matchedTo]};
+        } else {
+          const byName = lookupCuratedDensity(odoo.name);
+          if (byName && byName.marketPrice != null) {
+            const foundName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === byName);
+            curatedMatch = {name: foundName || odoo.name, ref: byName};
+          }
         }
-      }
-      if (curatedMatch) {
-        marketPrice = curatedMatch.ref.marketPrice;
-        marketSource = ' (r\u00E9f\u00E9rence ' + curatedMatch.name + ')';
-      } else if (odoo.price > 0) {
-        marketPrice = odoo.price;
-        marketSource = ' (prix achat Odoo)';
+        if (curatedMatch) {
+          marketPrice = curatedMatch.ref.marketPrice;
+          marketSource = ' (r\u00E9f\u00E9rence ' + curatedMatch.name + ')';
+        } else if (odoo.price > 0) {
+          marketPrice = odoo.price;
+          marketSource = ' (prix achat Odoo)';
+        }
       }
       if (marketPrice != null) {
         document.getElementById('marketPrice').value = marketPrice;
