@@ -687,6 +687,14 @@
     }
     .odoo-refresh-btn:hover { background: rgba(148,163,184,.25); }
     .odoo-refresh-btn:disabled { opacity: .5; cursor: wait; }
+    .price-alt {
+      color: #93c5fd;
+      font-weight: 600;
+      text-decoration: underline dotted;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+    .price-alt:hover { color: #bfdbfe; }
 
     /* Colors for values */
     .c-green { color: var(--green-400) !important; }
@@ -1741,6 +1749,13 @@
     return entry.name + ' (' + entry.code + ')';
   }
 
+  function pickAltPrice(event, price) {
+    event.preventDefault();
+    document.getElementById('rawPrice').value = price;
+    document.getElementById('rawCurrency').value = 'EUR';
+    recalc();
+  }
+
   function setSkuBadge(elId, code) {
     const el = document.getElementById(elId);
     if (!el) return;
@@ -1894,7 +1909,15 @@
       const priceMsg = odoo.price > 0
         ? 'Prix achat ' + odoo.price.toFixed(2) + ' \u20AC/kg'
         : 'Pas de prix Odoo';
-      hint.innerHTML = '\u2705 ' + odoo.code + ' \u00B7 ' + odoo.category + ' \u2022 ' + priceMsg + densityMsg + ' <span class="auto-tag">auto</span>';
+      let altsHtml = '';
+      if (Array.isArray(odoo.prices) && odoo.prices.length > 1) {
+        const alts = odoo.prices.map((pr, i) => {
+          const date = pr.updated ? ' <span style="color:var(--text-dim)">\u00B7 m\u00E0j ' + pr.updated + '</span>' : '';
+          return '<a href="#" class="price-alt" data-price="' + pr.price + '" onclick="pickAltPrice(event, ' + pr.price + ')">' + pr.price.toFixed(2) + ' \u20AC/kg</a>' + date;
+        }).join('<br>');
+        altsHtml = '<div style="margin-top:.3rem;font-size:.7rem;color:var(--text-muted)">Prix fournisseur disponibles (cliquer pour choisir) :<br>' + alts + '</div>';
+      }
+      hint.innerHTML = '\u2705 ' + odoo.code + ' \u00B7 ' + odoo.category + ' \u2022 ' + priceMsg + densityMsg + ' <span class="auto-tag">auto</span>' + altsHtml;
       onDensityChange();
     } else {
       setSkuBadge('productSku', null);

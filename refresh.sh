@@ -5,19 +5,24 @@
 #   Ask Claude Code (with the hubcycle-db MCP) to run this SQL and save
 #   the result as /tmp/odoo_products.json:
 #
-#     WITH primary_supplier AS (
-#       SELECT DISTINCT ON (si.template_odoo_id)
-#         si.template_odoo_id, si.price AS supplier_price,
-#         si.min_qty, p.name AS supplier_name
-#       FROM supplier_info si
-#       LEFT JOIN partners p ON p.odoo_id = si.partner_odoo_id
-#       ORDER BY si.template_odoo_id, si.sequence ASC
+#     WITH all_prices AS (
+#       SELECT template_odoo_id,
+#              jsonb_agg(
+#                jsonb_build_object(
+#                  'price', price,
+#                  'min_qty', min_qty,
+#                  'updated', to_char(odoo_write_date, 'YYYY-MM-DD')
+#                )
+#                ORDER BY odoo_write_date DESC NULLS LAST, sequence ASC
+#              ) AS prices
+#       FROM supplier_info
+#       GROUP BY template_odoo_id
 #     )
 #     SELECT pt.default_code, pt.name, pt.categ_name,
 #            COALESCE(pt.standard_price, 0) AS standard_price,
-#            ps.supplier_price, ps.supplier_name, ps.min_qty
+#            ap.prices
 #     FROM product_templates pt
-#     LEFT JOIN primary_supplier ps ON ps.template_odoo_id = pt.odoo_id
+#     LEFT JOIN all_prices ap ON ap.template_odoo_id = pt.odoo_id
 #     WHERE pt.is_active = true AND pt.categ_name != 'Service'
 #       AND pt.default_code IS NOT NULL AND pt.default_code != ''
 #     ORDER BY pt.categ_name, pt.name;
