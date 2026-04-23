@@ -18,21 +18,15 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 ODOO_JSON = Path("/tmp/odoo_products.json")
-INDEX_HTML = REPO / "index.html"
+CURATED_JSON = REPO / "curated.json"
 OUT_JSON = REPO / "products.json"
 
 
-def extract_curated(html_text: str) -> dict:
-    m = re.search(r"const PRODUCTS = \{(.*?)\n\s*\};", html_text, re.DOTALL)
-    if not m:
-        raise RuntimeError("Couldn't find PRODUCTS = { ... } block in index.html")
-    entry_re = re.compile(
-        r'"([^"]+)":\s*\{\s*density:\s*([\d.]+),\s*marketPrice:\s*([\d.]+),\s*state:\s*"([^"]+)"\s*\}'
-    )
-    return {
-        name: {"density": float(d), "marketPrice": float(p), "state": s}
-        for name, d, p, s in entry_re.findall(m.group(1))
-    }
+def load_curated() -> dict:
+    if not CURATED_JSON.exists():
+        raise RuntimeError(f"Missing {CURATED_JSON}")
+    data = json.loads(CURATED_JSON.read_text())
+    return data.get("products", {})
 
 
 def tokens(s: str) -> set:
@@ -90,7 +84,7 @@ def main() -> int:
         print(f"[WARN] {ODOO_JSON} is {mins} min old — data may be stale.", file=sys.stderr)
 
     odoo_products = json.loads(ODOO_JSON.read_text())
-    curated = extract_curated(INDEX_HTML.read_text())
+    curated = load_curated()
     print(f"Loaded {len(odoo_products)} Odoo products, {len(curated)} curated density entries")
 
     by_cat = {}
@@ -118,6 +112,10 @@ def main() -> int:
             "price": price,
             "priceSource": price_source,
         }
+        origin = p.get("origin_country")
+        if origin:
+            entry["originCountry"] = origin
+            entry["originSource"] = p.get("origin_source") or "unknown"
         if len(prices) > 1:
             # Pass full list so UI can show alternatives when user hits ambiguity
             entry["prices"] = [

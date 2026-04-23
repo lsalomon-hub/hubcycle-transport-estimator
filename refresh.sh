@@ -7,22 +7,43 @@
 #
 #     WITH all_prices AS (
 #       SELECT template_odoo_id,
-#              jsonb_agg(
-#                jsonb_build_object(
-#                  'price', price,
-#                  'min_qty', min_qty,
-#                  'updated', to_char(odoo_write_date, 'YYYY-MM-DD')
-#                )
-#                ORDER BY odoo_write_date DESC NULLS LAST, sequence ASC
-#              ) AS prices
-#       FROM supplier_info
-#       GROUP BY template_odoo_id
+#              jsonb_agg(jsonb_build_object(
+#                'price', price, 'min_qty', min_qty,
+#                'updated', to_char(odoo_write_date, 'YYYY-MM-DD')
+#              ) ORDER BY odoo_write_date DESC NULLS LAST, sequence ASC) AS prices
+#       FROM supplier_info GROUP BY template_odoo_id
+#     ),
+#     site_country AS (
+#       SELECT DISTINCT ON (psp.product_template_odoo_id)
+#         psp.product_template_odoo_id AS pid, ps.country_name
+#       FROM partner_site_products psp
+#       JOIN partner_sites ps ON ps.id = psp.site_id
+#       WHERE ps.country_name IS NOT NULL
+#       ORDER BY psp.product_template_odoo_id,
+#         CASE ps.site_type WHEN 'production' THEN 1 WHEN 'processing' THEN 2
+#           WHEN 'warehouse' THEN 3 WHEN 'distribution' THEN 4
+#           WHEN 'hq' THEN 5 ELSE 6 END
+#     ),
+#     supplier_country AS (
+#       SELECT DISTINCT ON (si.template_odoo_id)
+#         si.template_odoo_id AS pid, c.name AS country_name
+#       FROM supplier_info si
+#       LEFT JOIN partners p ON p.odoo_id = si.partner_odoo_id
+#       LEFT JOIN countries c ON c.odoo_id = p.country_odoo_id
+#       WHERE c.name IS NOT NULL
+#       ORDER BY si.template_odoo_id, si.sequence ASC
 #     )
 #     SELECT pt.default_code, pt.name, pt.categ_name,
 #            COALESCE(pt.standard_price, 0) AS standard_price,
-#            ap.prices
+#            ap.prices,
+#            COALESCE(sc.country_name, supc.country_name) AS origin_country,
+#            CASE WHEN sc.country_name IS NOT NULL THEN 'site'
+#                 WHEN supc.country_name IS NOT NULL THEN 'supplier'
+#                 ELSE NULL END AS origin_source
 #     FROM product_templates pt
 #     LEFT JOIN all_prices ap ON ap.template_odoo_id = pt.odoo_id
+#     LEFT JOIN site_country sc ON sc.pid = pt.odoo_id
+#     LEFT JOIN supplier_country supc ON supc.pid = pt.odoo_id
 #     WHERE pt.is_active = true AND pt.categ_name != 'Service'
 #       AND pt.default_code IS NOT NULL AND pt.default_code != ''
 #     ORDER BY pt.categ_name, pt.name;

@@ -1408,165 +1408,8 @@
 <datalist id="countryList"></datalist>
 
 <script>
-  // ═══════════════════════════════════════════════
-  // PRODUCT DATABASE — from Densities sheet (HubCycled_Transport_Estimator.xlsx)
-  // density = avg(min,max) kg/m³, marketPrice = avg(min,max) EUR/kg
-  // ═══════════════════════════════════════════════
-  const PRODUCTS = {
-    // ── PEPPER ──────────────────────────────────────
-    "Black pepper whole":        { density: 550, marketPrice: 5.50, state: "Dry" },
-    "Black pepper (powder)":     { density: 525, marketPrice: 6.50, state: "Dry" },
-    "Black pepper crushed":      { density: 480, marketPrice: 4.00, state: "Dry" },
-    "Black pepper broken":       { density: 450, marketPrice: 2.50, state: "Dry" },
-    "Black pepper fines":        { density: 500, marketPrice: 2.00, state: "Dry" },
-    "Black pepper deoiled":      { density: 480, marketPrice: 1.50, state: "Dry" },
-    "Black pepper light berries":{ density: 400, marketPrice: 1.80, state: "Dry" },
-    "White pepper whole":        { density: 600, marketPrice: 7.00, state: "Dry" },
-    "White pepper powder":       { density: 550, marketPrice: 7.50, state: "Dry" },
-    "Green pepper whole":        { density: 500, marketPrice: 8.00, state: "Dry" },
-    "Pink pepper":               { density: 325, marketPrice: 12.00, state: "Dry" },
-    "Pepper husk":               { density: 180, marketPrice: 0.50, state: "Dry" },
-    // ── GARLIC & ONION ──────────────────────────────
-    "Garlic skin (dry)":         { density: 140, marketPrice: 0.15, state: "Dry" },
-    "Garlic skin powder":        { density: 325, marketPrice: 1.20, state: "Dry" },
-    "Garlic powder":             { density: 600, marketPrice: 2.50, state: "Dry" },
-    "Garlic minced":             { density: 650, marketPrice: 2.80, state: "Dry" },
-    "Garlic granulated":         { density: 580, marketPrice: 2.70, state: "Dry" },
-    "Onion powder":              { density: 575, marketPrice: 2.00, state: "Dry" },
-    "Onion granulated":          { density: 560, marketPrice: 1.80, state: "Dry" },
-    // ── GINGER ──────────────────────────────────────
-    "Ginger powder":             { density: 525, marketPrice: 3.20, state: "Dry" },
-    "Ginger whole dried":        { density: 350, marketPrice: 2.50, state: "Dry" },
-    "Ginger deoiled":            { density: 480, marketPrice: 1.50, state: "Dry" },
-    "De-juiced ginger (dry)":    { density: 275, marketPrice: 1.50, state: "Dry" },
-    "Ginger juice, frozen":      { density: 1050, marketPrice: 3.40, state: "Frozen" },
-    // ── CINNAMON / CASSIA ───────────────────────────
-    "Cinnamon powder":           { density: 475, marketPrice: 3.50, state: "Dry" },
-    "Cassia whole":              { density: 250, marketPrice: 2.80, state: "Dry" },
-    "Cassia shred":              { density: 180, marketPrice: 2.00, state: "Dry" },
-    "Cassia husk":               { density: 160, marketPrice: 0.80, state: "Dry" },
-    "Cassia bark powder":        { density: 475, marketPrice: 3.20, state: "Dry" },
-    "Cinnamon fines":            { density: 400, marketPrice: 1.50, state: "Dry" },
-    "Cinnamon deoiled":          { density: 420, marketPrice: 1.80, state: "Dry" },
-    // ── CUMIN / CORIANDER ───────────────────────────
-    "Cumin whole":               { density: 450, marketPrice: 3.00, state: "Dry" },
-    "Cumin powder":              { density: 475, marketPrice: 3.50, state: "Dry" },
-    "Cumin fines":               { density: 440, marketPrice: 1.50, state: "Dry" },
-    "Coriander whole":           { density: 350, marketPrice: 1.50, state: "Dry" },
-    "Coriander powder":          { density: 425, marketPrice: 2.20, state: "Dry" },
-    // ── CARDAMOM ────────────────────────────────────
-    "Cardamom whole":            { density: 450, marketPrice: 22.00, state: "Dry" },
-    "Cardamom husks":            { density: 150, marketPrice: 13.00, state: "Dry" },
-    "Cardamom powder":           { density: 425, marketPrice: 18.00, state: "Dry" },
-    "Cardamom fines":            { density: 380, marketPrice: 12.00, state: "Dry" },
-    // ── OTHER SPICES ────────────────────────────────
-    "Turmeric whole":            { density: 500, marketPrice: 2.00, state: "Dry" },
-    "Turmeric (powder)":         { density: 625, marketPrice: 2.80, state: "Dry" },
-    "Paprika powder":            { density: 525, marketPrice: 3.50, state: "Dry" },
-    "Chili powder":              { density: 475, marketPrice: 2.80, state: "Dry" },
-    "Chili whole dried":         { density: 250, marketPrice: 3.50, state: "Dry" },
-    "Chilli sortings":           { density: 350, marketPrice: 1.50, state: "Dry" },
-    "Nutmeg whole":              { density: 550, marketPrice: 5.00, state: "Dry" },
-    "Nutmeg powder":             { density: 475, marketPrice: 6.00, state: "Dry" },
-    "Clove whole":               { density: 500, marketPrice: 7.00, state: "Dry" },
-    "Clove powder":              { density: 575, marketPrice: 8.00, state: "Dry" },
-    "Allspice whole":            { density: 500, marketPrice: 3.50, state: "Dry" },
-    "Allspice powder":           { density: 475, marketPrice: 3.50, state: "Dry" },
-    "Star anise whole":          { density: 300, marketPrice: 6.00, state: "Dry" },
-    "Star anise broken":         { density: 280, marketPrice: 4.00, state: "Dry" },
-    "Saffron powder":            { density: 425, marketPrice: 1200.00, state: "Dry" },
-    "Saffron deoiled":           { density: 400, marketPrice: 50.00, state: "Dry" },
-    "Fenugreek powder":          { density: 500, marketPrice: 2.50, state: "Dry" },
-    "Fenugreek deoiled":         { density: 480, marketPrice: 1.20, state: "Dry" },
-    // ── HERBS ───────────────────────────────────────
-    "Basil powder":              { density: 350, marketPrice: 5.00, state: "Dry" },
-    "Basil dried leaves":        { density: 100, marketPrice: 7.00, state: "Dry" },
-    "Basil fines":               { density: 300, marketPrice: 1.50, state: "Dry" },
-    "Oregano dried":             { density: 120, marketPrice: 5.00, state: "Dry" },
-    "Oregano / Basil (dried)":   { density: 115, marketPrice: 7.00, state: "Dry" },
-    "Rosemary dried":            { density: 150, marketPrice: 4.00, state: "Dry" },
-    "Thyme dried":               { density: 160, marketPrice: 5.00, state: "Dry" },
-    "Mint dried":                { density: 130, marketPrice: 5.50, state: "Dry" },
-    "Chamomile powder":          { density: 375, marketPrice: 12.00, state: "Dry" },
-    "Parsley dried":             { density: 140, marketPrice: 4.00, state: "Dry" },
-    "Alfalfa powder":            { density: 350, marketPrice: 1.50, state: "Dry" },
-    "Barleygrass powder":        { density: 380, marketPrice: 2.50, state: "Dry" },
-    // ── VANILLA ─────────────────────────────────────
-    "Exhausted vanilla pods":    { density: 400, marketPrice: 3.50, state: "Dry" },
-    "Vanilla powder":            { density: 475, marketPrice: 8.00, state: "Dry" },
-    "Vanilla beans extraction grade": { density: 380, marketPrice: 25.00, state: "Dry" },
-    // ── COCOA & COFFEE ──────────────────────────────
-    "Cocoa powder":              { density: 575, marketPrice: 9.00, state: "Dry" },
-    "Cocoa husks":               { density: 250, marketPrice: 0.50, state: "Dry" },
-    "Cocoa shells":              { density: 200, marketPrice: 0.30, state: "Dry" },
-    "Coffee grounds":            { density: 475, marketPrice: 0.05, state: "Dry" },
-    "Green coffee extract":      { density: 600, marketPrice: 25.00, state: "Dry" },
-    // ── FRUITS ──────────────────────────────────────
-    "Apple pomace (dry)":        { density: 400, marketPrice: 0.80, state: "Dry" },
-    "Apple pomace (wet)":        { density: 800, marketPrice: 0.05, state: "Fresh" },
-    "Apple powder":              { density: 500, marketPrice: 4.00, state: "Dry" },
-    "Apple chips":               { density: 120, marketPrice: 5.00, state: "Dry" },
-    "Apple peel dried":          { density: 200, marketPrice: 1.00, state: "Dry" },
-    "Blueberry pomace (dry)":    { density: 380, marketPrice: 4.00, state: "Dry" },
-    "Blackberry pomace":         { density: 380, marketPrice: 1.50, state: "Dry" },
-    "Cranberry pomace":          { density: 400, marketPrice: 2.00, state: "Dry" },
-    "Citrus pomace":             { density: 360, marketPrice: 0.60, state: "Dry" },
-    "Lemon peel dried":          { density: 320, marketPrice: 1.50, state: "Dry" },
-    "Orange peel dried":         { density: 300, marketPrice: 1.00, state: "Dry" },
-    "Mango puree":               { density: 1050, marketPrice: 1.50, state: "Liquid" },
-    "Aronia concentrate":        { density: 1200, marketPrice: 2.50, state: "Liquid" },
-    "Elderberry concentrate":    { density: 1250, marketPrice: 3.00, state: "Liquid" },
-    "Spray-dried fruits":        { density: 500, marketPrice: 18.00, state: "Dry" },
-    "Freeze-dried fruit":        { density: 100, marketPrice: 25.00, state: "Dry" },
-    "Fruit juice (liquid)":      { density: 1040, marketPrice: 1.20, state: "Liquid" },
-    "Concentrated juice (>60 Brix)": { density: 1300, marketPrice: 2.50, state: "Liquid" },
-    // ── PRESS CAKES & OILS ──────────────────────────
-    "Almond press cakes":        { density: 480, marketPrice: 2.50, state: "Dry" },
-    "Hazelnut press cakes":      { density: 490, marketPrice: 3.00, state: "Dry" },
-    "Coconut press cakes":       { density: 520, marketPrice: 1.00, state: "Dry" },
-    "Black cumin press cakes":   { density: 500, marketPrice: 2.00, state: "Dry" },
-    "Apricot kernel press cakes":{ density: 470, marketPrice: 1.50, state: "Dry" },
-    // ── OTHER ───────────────────────────────────────
-    "Hop pellets":               { density: 525, marketPrice: 3.50, state: "Dry" },
-    "Devil's claw":              { density: 425, marketPrice: 8.00, state: "Dry" },
-    "Brewery spent grain (dry)": { density: 375, marketPrice: 0.15, state: "Dry" },
-    "Spirulina powder":          { density: 475, marketPrice: 15.00, state: "Dry" },
-    "Ashwagandha powder":        { density: 450, marketPrice: 6.00, state: "Dry" },
-    "Eggshell":                  { density: 950, marketPrice: 0.30, state: "Dry" },
-    "Raw feathers":              { density: 55,  marketPrice: 0.10, state: "Dry" },
-    "Aquafaba concentrate":      { density: 1050, marketPrice: 3.00, state: "Liquid" },
-    // ── HEAT TREATED (HT) — m&ecirc;me densit&eacute;, prix +20-25% (food-safe, pr&ecirc;t &agrave; l'emploi) ──
-    "Black pepper powder HT":    { density: 525, marketPrice: 8.00, state: "Dry" },
-    "Black pepper crushed HT":   { density: 480, marketPrice: 5.00, state: "Dry" },
-    "White pepper powder HT":    { density: 550, marketPrice: 9.00, state: "Dry" },
-    "Garlic powder HT":          { density: 600, marketPrice: 3.20, state: "Dry" },
-    "Garlic skin powder HT":     { density: 325, marketPrice: 1.50, state: "Dry" },
-    "Onion powder HT":           { density: 575, marketPrice: 2.50, state: "Dry" },
-    "Ginger powder HT":          { density: 525, marketPrice: 4.00, state: "Dry" },
-    "Cinnamon powder HT":        { density: 475, marketPrice: 4.30, state: "Dry" },
-    "Cassia bark powder HT":     { density: 475, marketPrice: 4.00, state: "Dry" },
-    "Cumin powder HT":           { density: 475, marketPrice: 4.30, state: "Dry" },
-    "Coriander powder HT":       { density: 425, marketPrice: 2.80, state: "Dry" },
-    "Turmeric powder HT":        { density: 625, marketPrice: 3.50, state: "Dry" },
-    "Paprika powder HT":         { density: 525, marketPrice: 4.30, state: "Dry" },
-    "Chili powder HT":           { density: 475, marketPrice: 3.50, state: "Dry" },
-    "Nutmeg powder HT":          { density: 475, marketPrice: 7.50, state: "Dry" },
-    "Clove powder HT":           { density: 575, marketPrice: 10.00, state: "Dry" },
-    "Cardamom powder HT":        { density: 425, marketPrice: 18.00, state: "Dry" },
-    "Allspice powder HT":        { density: 475, marketPrice: 4.30, state: "Dry" },
-    "Fenugreek powder HT":       { density: 500, marketPrice: 3.20, state: "Dry" },
-    "Basil powder HT":           { density: 350, marketPrice: 6.50, state: "Dry" },
-    "Oregano powder HT":         { density: 350, marketPrice: 6.50, state: "Dry" },
-    "Rosemary powder HT":        { density: 350, marketPrice: 5.00, state: "Dry" },
-    "Thyme powder HT":           { density: 350, marketPrice: 6.50, state: "Dry" },
-    "Parsley powder HT":         { density: 350, marketPrice: 5.00, state: "Dry" },
-    "Chamomile powder HT":       { density: 375, marketPrice: 15.00, state: "Dry" },
-    "Cocoa powder HT":           { density: 575, marketPrice: 11.00, state: "Dry" },
-    "Apple pomace powder HT":    { density: 400, marketPrice: 1.20, state: "Dry" },
-    "Vanilla powder HT":         { density: 475, marketPrice: 10.00, state: "Dry" },
-    "Spirulina powder HT":       { density: 475, marketPrice: 18.00, state: "Dry" },
-    "Ashwagandha powder HT":     { density: 450, marketPrice: 7.50, state: "Dry" },
-  };
+  // PRODUCT REFERENCE — loaded at runtime from curated.json via loadCurated()
+  let PRODUCTS = {};
 
   // ── ODOO PRODUCTS — fetched at runtime from products.json ──
   // Populated by loadOdooProducts() on page load + every 15 min.
@@ -1749,14 +1592,8 @@
     return entry.name + ' (' + entry.code + ')';
   }
 
-  // ═══════════════════════════════════════════════
-  // SKU-specific market price overrides
-  // Used when a specific Odoo SKU has a distinct market price from the
-  // curated category default (e.g. high-VO premium products).
-  // ═══════════════════════════════════════════════
-  const CURATED_SKU_OVERRIDES = {
-    'D397X': { marketPrice: 28.00, note: 'Cardamom Powder premium high-VO' },
-  };
+  // SKU overrides — loaded at runtime from curated.json via loadCurated()
+  let CURATED_SKU_OVERRIDES = {};
 
   function pickAltPrice(event, price) {
     event.preventDefault();
@@ -1844,6 +1681,28 @@
   // ═══════════════════════════════════════════════
   const ODOO_REFRESH_MS = 15 * 60 * 1000;
 
+  // Fetch the curated reference (density/marketPrice/state per product family
+  // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
+  // so that updates to marketPrice reference values propagate via the Refresh button
+  // without needing a hard-reload of the HTML.
+  async function loadCurated() {
+    try {
+      const url = 'curated.json?v=' + Date.now();
+      const res = await fetch(url, {cache: 'no-store'});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      PRODUCTS = data.products || {};
+      CURATED_SKU_OVERRIDES = {};
+      for (const code in (data.skuOverrides || {})) {
+        CURATED_SKU_OVERRIDES[code.toUpperCase()] = data.skuOverrides[code];
+      }
+      return true;
+    } catch (e) {
+      console.error('Failed to load curated.json', e);
+      return false;
+    }
+  }
+
   async function loadOdooProducts() {
     const statusEl = document.getElementById('odooStatus');
     const textEl = document.getElementById('odooStatusText');
@@ -1875,15 +1734,20 @@
     const btn = document.getElementById('odooRefreshBtn');
     const textEl = document.getElementById('odooStatusText');
     if (btn) btn.disabled = true;
-    const prev = textEl ? textEl.innerHTML : '';
     if (textEl) textEl.innerHTML = '\u21bb Rafra\u00EEchissement\u2026';
-    try { await loadOdooProducts(); }
-    finally { if (btn) btn.disabled = false; }
+    try {
+      await loadCurated();
+      await loadOdooProducts();
+    } finally { if (btn) btn.disabled = false; }
   }
 
-  function startOdooRefreshLoop() {
-    loadOdooProducts();
-    setInterval(loadOdooProducts, ODOO_REFRESH_MS);
+  async function startOdooRefreshLoop() {
+    await loadCurated();
+    await loadOdooProducts();
+    setInterval(async () => {
+      await loadCurated();
+      await loadOdooProducts();
+    }, ODOO_REFRESH_MS);
   }
 
   // ═══════════════════════════════════════════════
@@ -1899,6 +1763,15 @@
       // Purchase price from Odoo
       document.getElementById('rawPrice').value = odoo.price;
       document.getElementById('rawCurrency').value = 'EUR';
+      // Origin country (auto but editable): from manufacturing site if available,
+      // fallback to primary supplier's country
+      if (odoo.originCountry) {
+        const t1OriginEl = document.getElementById('t1Origin');
+        if (t1OriginEl) {
+          t1OriginEl.value = odoo.originCountry;
+          if (typeof onRouteChange === 'function') onRouteChange('t1');
+        }
+      }
       // Density/state from curated match (either explicit via matchedTo, or try on-the-fly)
       const curated = odoo.density != null
         ? {density: odoo.density, state: odoo.state}

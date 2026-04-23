@@ -1,0 +1,706 @@
+{
+  "description": "Curated reference data. Edit directly; commit & push to deploy.",
+  "products": {
+    "Black pepper whole": {
+      "density": 550.0,
+      "marketPrice": 5.5,
+      "state": "Dry"
+    },
+    "Black pepper (powder)": {
+      "density": 525.0,
+      "marketPrice": 6.5,
+      "state": "Dry"
+    },
+    "Black pepper crushed": {
+      "density": 480.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Black pepper broken": {
+      "density": 450.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Black pepper fines": {
+      "density": 500.0,
+      "marketPrice": 2.0,
+      "state": "Dry"
+    },
+    "Black pepper deoiled": {
+      "density": 480.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Black pepper light berries": {
+      "density": 400.0,
+      "marketPrice": 1.8,
+      "state": "Dry"
+    },
+    "White pepper whole": {
+      "density": 600.0,
+      "marketPrice": 7.0,
+      "state": "Dry"
+    },
+    "White pepper powder": {
+      "density": 550.0,
+      "marketPrice": 7.5,
+      "state": "Dry"
+    },
+    "Green pepper whole": {
+      "density": 500.0,
+      "marketPrice": 8.0,
+      "state": "Dry"
+    },
+    "Pink pepper": {
+      "density": 325.0,
+      "marketPrice": 12.0,
+      "state": "Dry"
+    },
+    "Pepper husk": {
+      "density": 180.0,
+      "marketPrice": 0.5,
+      "state": "Dry"
+    },
+    "Garlic skin (dry)": {
+      "density": 140.0,
+      "marketPrice": 0.15,
+      "state": "Dry"
+    },
+    "Garlic skin powder": {
+      "density": 325.0,
+      "marketPrice": 1.2,
+      "state": "Dry"
+    },
+    "Garlic powder": {
+      "density": 600.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Garlic minced": {
+      "density": 650.0,
+      "marketPrice": 2.8,
+      "state": "Dry"
+    },
+    "Garlic granulated": {
+      "density": 580.0,
+      "marketPrice": 2.7,
+      "state": "Dry"
+    },
+    "Onion powder": {
+      "density": 575.0,
+      "marketPrice": 2.0,
+      "state": "Dry"
+    },
+    "Onion granulated": {
+      "density": 560.0,
+      "marketPrice": 1.8,
+      "state": "Dry"
+    },
+    "Ginger powder": {
+      "density": 525.0,
+      "marketPrice": 3.2,
+      "state": "Dry"
+    },
+    "Ginger whole dried": {
+      "density": 350.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Ginger deoiled": {
+      "density": 480.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "De-juiced ginger (dry)": {
+      "density": 275.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Ginger juice, frozen": {
+      "density": 1050.0,
+      "marketPrice": 3.4,
+      "state": "Frozen"
+    },
+    "Cinnamon powder": {
+      "density": 475.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Cassia whole": {
+      "density": 250.0,
+      "marketPrice": 2.8,
+      "state": "Dry"
+    },
+    "Cassia shred": {
+      "density": 180.0,
+      "marketPrice": 2.0,
+      "state": "Dry"
+    },
+    "Cassia husk": {
+      "density": 160.0,
+      "marketPrice": 0.8,
+      "state": "Dry"
+    },
+    "Cassia bark powder": {
+      "density": 475.0,
+      "marketPrice": 3.2,
+      "state": "Dry"
+    },
+    "Cinnamon fines": {
+      "density": 400.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Cinnamon deoiled": {
+      "density": 420.0,
+      "marketPrice": 1.8,
+      "state": "Dry"
+    },
+    "Cumin whole": {
+      "density": 450.0,
+      "marketPrice": 3.0,
+      "state": "Dry"
+    },
+    "Cumin powder": {
+      "density": 475.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Cumin fines": {
+      "density": 440.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Coriander whole": {
+      "density": 350.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Coriander powder": {
+      "density": 425.0,
+      "marketPrice": 2.2,
+      "state": "Dry"
+    },
+    "Cardamom whole": {
+      "density": 450.0,
+      "marketPrice": 22.0,
+      "state": "Dry"
+    },
+    "Cardamom husks": {
+      "density": 150.0,
+      "marketPrice": 13.0,
+      "state": "Dry"
+    },
+    "Cardamom powder": {
+      "density": 425.0,
+      "marketPrice": 18.0,
+      "state": "Dry"
+    },
+    "Cardamom fines": {
+      "density": 380.0,
+      "marketPrice": 12.0,
+      "state": "Dry"
+    },
+    "Turmeric whole": {
+      "density": 500.0,
+      "marketPrice": 2.0,
+      "state": "Dry"
+    },
+    "Turmeric (powder)": {
+      "density": 625.0,
+      "marketPrice": 2.8,
+      "state": "Dry"
+    },
+    "Paprika powder": {
+      "density": 525.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Chili powder": {
+      "density": 475.0,
+      "marketPrice": 2.8,
+      "state": "Dry"
+    },
+    "Chili whole dried": {
+      "density": 250.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Chilli sortings": {
+      "density": 350.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Nutmeg whole": {
+      "density": 550.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Nutmeg powder": {
+      "density": 475.0,
+      "marketPrice": 6.0,
+      "state": "Dry"
+    },
+    "Clove whole": {
+      "density": 500.0,
+      "marketPrice": 7.0,
+      "state": "Dry"
+    },
+    "Clove powder": {
+      "density": 575.0,
+      "marketPrice": 8.0,
+      "state": "Dry"
+    },
+    "Allspice whole": {
+      "density": 500.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Allspice powder": {
+      "density": 475.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Star anise whole": {
+      "density": 300.0,
+      "marketPrice": 6.0,
+      "state": "Dry"
+    },
+    "Star anise broken": {
+      "density": 280.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Saffron powder": {
+      "density": 425.0,
+      "marketPrice": 1200.0,
+      "state": "Dry"
+    },
+    "Saffron deoiled": {
+      "density": 400.0,
+      "marketPrice": 50.0,
+      "state": "Dry"
+    },
+    "Fenugreek powder": {
+      "density": 500.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Fenugreek deoiled": {
+      "density": 480.0,
+      "marketPrice": 1.2,
+      "state": "Dry"
+    },
+    "Basil powder": {
+      "density": 350.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Basil dried leaves": {
+      "density": 100.0,
+      "marketPrice": 7.0,
+      "state": "Dry"
+    },
+    "Basil fines": {
+      "density": 300.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Oregano dried": {
+      "density": 120.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Oregano / Basil (dried)": {
+      "density": 115.0,
+      "marketPrice": 7.0,
+      "state": "Dry"
+    },
+    "Rosemary dried": {
+      "density": 150.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Thyme dried": {
+      "density": 160.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Mint dried": {
+      "density": 130.0,
+      "marketPrice": 5.5,
+      "state": "Dry"
+    },
+    "Chamomile powder": {
+      "density": 375.0,
+      "marketPrice": 12.0,
+      "state": "Dry"
+    },
+    "Parsley dried": {
+      "density": 140.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Alfalfa powder": {
+      "density": 350.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Barleygrass powder": {
+      "density": 380.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Exhausted vanilla pods": {
+      "density": 400.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Vanilla powder": {
+      "density": 475.0,
+      "marketPrice": 8.0,
+      "state": "Dry"
+    },
+    "Vanilla beans extraction grade": {
+      "density": 380.0,
+      "marketPrice": 25.0,
+      "state": "Dry"
+    },
+    "Cocoa powder": {
+      "density": 575.0,
+      "marketPrice": 9.0,
+      "state": "Dry"
+    },
+    "Cocoa husks": {
+      "density": 250.0,
+      "marketPrice": 0.5,
+      "state": "Dry"
+    },
+    "Cocoa shells": {
+      "density": 200.0,
+      "marketPrice": 0.3,
+      "state": "Dry"
+    },
+    "Coffee grounds": {
+      "density": 475.0,
+      "marketPrice": 0.05,
+      "state": "Dry"
+    },
+    "Green coffee extract": {
+      "density": 600.0,
+      "marketPrice": 25.0,
+      "state": "Dry"
+    },
+    "Apple pomace (dry)": {
+      "density": 400.0,
+      "marketPrice": 0.8,
+      "state": "Dry"
+    },
+    "Apple pomace (wet)": {
+      "density": 800.0,
+      "marketPrice": 0.05,
+      "state": "Fresh"
+    },
+    "Apple powder": {
+      "density": 500.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Apple chips": {
+      "density": 120.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Apple peel dried": {
+      "density": 200.0,
+      "marketPrice": 1.0,
+      "state": "Dry"
+    },
+    "Blueberry pomace (dry)": {
+      "density": 380.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Blackberry pomace": {
+      "density": 380.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Cranberry pomace": {
+      "density": 400.0,
+      "marketPrice": 2.0,
+      "state": "Dry"
+    },
+    "Citrus pomace": {
+      "density": 360.0,
+      "marketPrice": 0.6,
+      "state": "Dry"
+    },
+    "Lemon peel dried": {
+      "density": 320.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Orange peel dried": {
+      "density": 300.0,
+      "marketPrice": 1.0,
+      "state": "Dry"
+    },
+    "Mango puree": {
+      "density": 1050.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Aronia concentrate": {
+      "density": 1200.0,
+      "marketPrice": 2.5,
+      "state": "Liquid"
+    },
+    "Elderberry concentrate": {
+      "density": 1250.0,
+      "marketPrice": 3.0,
+      "state": "Liquid"
+    },
+    "Spray-dried fruits": {
+      "density": 500.0,
+      "marketPrice": 18.0,
+      "state": "Dry"
+    },
+    "Freeze-dried fruit": {
+      "density": 100.0,
+      "marketPrice": 25.0,
+      "state": "Dry"
+    },
+    "Fruit juice (liquid)": {
+      "density": 1040.0,
+      "marketPrice": 1.2,
+      "state": "Liquid"
+    },
+    "Concentrated juice (>60 Brix)": {
+      "density": 1300.0,
+      "marketPrice": 2.5,
+      "state": "Liquid"
+    },
+    "Almond press cakes": {
+      "density": 480.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Hazelnut press cakes": {
+      "density": 490.0,
+      "marketPrice": 3.0,
+      "state": "Dry"
+    },
+    "Coconut press cakes": {
+      "density": 520.0,
+      "marketPrice": 1.0,
+      "state": "Dry"
+    },
+    "Black cumin press cakes": {
+      "density": 500.0,
+      "marketPrice": 2.0,
+      "state": "Dry"
+    },
+    "Apricot kernel press cakes": {
+      "density": 470.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Hop pellets": {
+      "density": 525.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Devil's claw": {
+      "density": 425.0,
+      "marketPrice": 8.0,
+      "state": "Dry"
+    },
+    "Brewery spent grain (dry)": {
+      "density": 375.0,
+      "marketPrice": 0.15,
+      "state": "Dry"
+    },
+    "Spirulina powder": {
+      "density": 475.0,
+      "marketPrice": 15.0,
+      "state": "Dry"
+    },
+    "Ashwagandha powder": {
+      "density": 450.0,
+      "marketPrice": 6.0,
+      "state": "Dry"
+    },
+    "Eggshell": {
+      "density": 950.0,
+      "marketPrice": 0.3,
+      "state": "Dry"
+    },
+    "Raw feathers": {
+      "density": 55.0,
+      "marketPrice": 0.1,
+      "state": "Dry"
+    },
+    "Aquafaba concentrate": {
+      "density": 1050.0,
+      "marketPrice": 3.0,
+      "state": "Liquid"
+    },
+    "Black pepper powder HT": {
+      "density": 525.0,
+      "marketPrice": 8.0,
+      "state": "Dry"
+    },
+    "Black pepper crushed HT": {
+      "density": 480.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "White pepper powder HT": {
+      "density": 550.0,
+      "marketPrice": 9.0,
+      "state": "Dry"
+    },
+    "Garlic powder HT": {
+      "density": 600.0,
+      "marketPrice": 3.2,
+      "state": "Dry"
+    },
+    "Garlic skin powder HT": {
+      "density": 325.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Onion powder HT": {
+      "density": 575.0,
+      "marketPrice": 2.5,
+      "state": "Dry"
+    },
+    "Ginger powder HT": {
+      "density": 525.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Cinnamon powder HT": {
+      "density": 475.0,
+      "marketPrice": 4.3,
+      "state": "Dry"
+    },
+    "Cassia bark powder HT": {
+      "density": 475.0,
+      "marketPrice": 4.0,
+      "state": "Dry"
+    },
+    "Cumin powder HT": {
+      "density": 475.0,
+      "marketPrice": 4.3,
+      "state": "Dry"
+    },
+    "Coriander powder HT": {
+      "density": 425.0,
+      "marketPrice": 2.8,
+      "state": "Dry"
+    },
+    "Turmeric powder HT": {
+      "density": 625.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Paprika powder HT": {
+      "density": 525.0,
+      "marketPrice": 4.3,
+      "state": "Dry"
+    },
+    "Chili powder HT": {
+      "density": 475.0,
+      "marketPrice": 3.5,
+      "state": "Dry"
+    },
+    "Nutmeg powder HT": {
+      "density": 475.0,
+      "marketPrice": 7.5,
+      "state": "Dry"
+    },
+    "Clove powder HT": {
+      "density": 575.0,
+      "marketPrice": 10.0,
+      "state": "Dry"
+    },
+    "Cardamom powder HT": {
+      "density": 425.0,
+      "marketPrice": 18.0,
+      "state": "Dry"
+    },
+    "Allspice powder HT": {
+      "density": 475.0,
+      "marketPrice": 4.3,
+      "state": "Dry"
+    },
+    "Fenugreek powder HT": {
+      "density": 500.0,
+      "marketPrice": 3.2,
+      "state": "Dry"
+    },
+    "Basil powder HT": {
+      "density": 350.0,
+      "marketPrice": 6.5,
+      "state": "Dry"
+    },
+    "Oregano powder HT": {
+      "density": 350.0,
+      "marketPrice": 6.5,
+      "state": "Dry"
+    },
+    "Rosemary powder HT": {
+      "density": 350.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Thyme powder HT": {
+      "density": 350.0,
+      "marketPrice": 6.5,
+      "state": "Dry"
+    },
+    "Parsley powder HT": {
+      "density": 350.0,
+      "marketPrice": 5.0,
+      "state": "Dry"
+    },
+    "Chamomile powder HT": {
+      "density": 375.0,
+      "marketPrice": 15.0,
+      "state": "Dry"
+    },
+    "Cocoa powder HT": {
+      "density": 575.0,
+      "marketPrice": 11.0,
+      "state": "Dry"
+    },
+    "Apple pomace powder HT": {
+      "density": 400.0,
+      "marketPrice": 1.2,
+      "state": "Dry"
+    },
+    "Vanilla powder HT": {
+      "density": 475.0,
+      "marketPrice": 10.0,
+      "state": "Dry"
+    },
+    "Spirulina powder HT": {
+      "density": 475.0,
+      "marketPrice": 18.0,
+      "state": "Dry"
+    },
+    "Ashwagandha powder HT": {
+      "density": 450.0,
+      "marketPrice": 7.5,
+      "state": "Dry"
+    }
+  },
+  "skuOverrides": {
+    "D397X": {
+      "marketPrice": 28.0,
+      "note": "Cardamom Powder premium high-VO"
+    }
+  }
+}
