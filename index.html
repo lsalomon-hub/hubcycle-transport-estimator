@@ -1602,6 +1602,30 @@
     recalc();
   }
 
+  // Shared market-price resolution used by both input + output product handlers.
+  // Resolution order: SKU override -> curated match (by matchedTo) -> name lookup
+  // -> Odoo purchase price. Returns {price, source} or null.
+  function resolveMarketPriceForOdoo(odoo) {
+    if (!odoo) return null;
+    const skuOverride = CURATED_SKU_OVERRIDES[odoo.code.toUpperCase()];
+    if (skuOverride) {
+      return {
+        price: skuOverride.marketPrice,
+        source: 'override ' + odoo.code + (skuOverride.note ? ': ' + skuOverride.note : ''),
+      };
+    }
+    if (odoo.matchedTo && PRODUCTS[odoo.matchedTo]) {
+      return { price: PRODUCTS[odoo.matchedTo].marketPrice, source: 'r\u00E9f\u00E9rence ' + odoo.matchedTo };
+    }
+    const byName = lookupCuratedDensity(odoo.name);
+    if (byName && byName.marketPrice != null) {
+      const foundName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === byName);
+      return { price: byName.marketPrice, source: 'r\u00E9f\u00E9rence ' + (foundName || odoo.name) };
+    }
+    if (odoo.price > 0) return { price: odoo.price, source: 'prix achat Odoo' };
+    return null;
+  }
+
   function setSkuBadge(elId, code) {
     const el = document.getElementById(elId);
     if (!el) return;
@@ -1772,6 +1796,14 @@
           if (typeof onRouteChange === 'function') onRouteChange('t1');
         }
       }
+      // Market price: mirror from input product when no output product is set.
+      // If user has specified a distinct output product, onOutputProductChange
+      // owns marketPrice (product transforms to a different market reference).
+      const outVal = (document.getElementById('outputProduct').value || '').trim();
+      if (!outVal) {
+        const mp = resolveMarketPriceForOdoo(odoo);
+        if (mp) document.getElementById('marketPrice').value = mp.price;
+      }
       // Density/state from curated match (either explicit via matchedTo, or try on-the-fly)
       const curated = odoo.density != null
         ? {density: odoo.density, state: odoo.state}
@@ -1927,36 +1959,11 @@
       if (densityRef && densityRef.density) {
         document.getElementById('processedDensity').value = densityRef.density;
       }
-      // Market price resolution order:
-      //  1) SKU-specific override (e.g. premium high-VO products)
-      //  2) Curated category match (via odoo.matchedTo)
-      //  3) Name-based curated fallback
-      //  4) Odoo purchase price
+      const mp = resolveMarketPriceForOdoo(odoo);
       let marketPrice = null, marketSource = '';
-      const skuOverride = CURATED_SKU_OVERRIDES[odoo.code.toUpperCase()];
-      if (skuOverride) {
-        marketPrice = skuOverride.marketPrice;
-        marketSource = ' (override ' + odoo.code + (skuOverride.note ? ': ' + skuOverride.note : '') + ')';
-      } else {
-        let curatedMatch = null;
-        if (odoo.matchedTo && PRODUCTS[odoo.matchedTo]) {
-          curatedMatch = {name: odoo.matchedTo, ref: PRODUCTS[odoo.matchedTo]};
-        } else {
-          const byName = lookupCuratedDensity(odoo.name);
-          if (byName && byName.marketPrice != null) {
-            const foundName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === byName);
-            curatedMatch = {name: foundName || odoo.name, ref: byName};
-          }
-        }
-        if (curatedMatch) {
-          marketPrice = curatedMatch.ref.marketPrice;
-          marketSource = ' (r\u00E9f\u00E9rence ' + curatedMatch.name + ')';
-        } else if (odoo.price > 0) {
-          marketPrice = odoo.price;
-          marketSource = ' (prix achat Odoo)';
-        }
-      }
-      if (marketPrice != null) {
+      if (mp) {
+        marketPrice = mp.price;
+        marketSource = ' (' + mp.source + ')';
         document.getElementById('marketPrice').value = marketPrice;
       }
       const densityTxt = densityRef && densityRef.density ? ' \u2022 Densit\u00E9 ' + densityRef.density + ' kg/m\u00B3' : '';
