@@ -50,26 +50,42 @@ FORM = {
 
 
 def best_match(odoo_name: str, curated: dict):
+    """Pick the curated entry that best describes the Odoo product.
+
+    Scoring favors matches where the curated entry's tokens are well-covered
+    by the Odoo name (subset-style match). Penalizes "extra" curated tokens
+    not in the Odoo name (e.g. "light" in "light berries" when Odoo says
+    "berries powder" — the curated entry brings unrelated specificity).
+
+      coverage    = |inter| / |ct|     # curated tokens covered by odoo
+      specificity = |inter| / |ot|     # how concentrated the match is
+      missing     = |ct - ot|          # curated tokens absent from odoo
+      form_bonus  = +0.20 if a form keyword matches, -0.30 if both sides
+                    have form keywords but they don't intersect
+      score = 0.6*coverage + 0.4*specificity + form_bonus - 0.10*missing
+    """
     best, best_score = None, 0.0
     ot = tokens(odoo_name) - STOP
     if not ot:
         return None
-    for cname, _ in curated.items():
+    for cname in curated:
         ct = tokens(cname) - STOP
         if not ct:
             continue
         inter = ot & ct
         if not inter or not (inter - FORM):
             continue
-        jaccard = len(inter) / len(ot | ct)
-        bonus = 0.0
+        coverage = len(inter) / len(ct)
+        specificity = len(inter) / len(ot)
+        missing = len(ct - ot)
         of, cf = ot & FORM, ct & FORM
+        form_bonus = 0.0
         if of and cf:
-            bonus += 0.20 if (inter & FORM) else -0.30
-        s = jaccard + bonus
+            form_bonus = 0.20 if (inter & FORM) else -0.30
+        s = 0.6 * coverage + 0.4 * specificity + form_bonus - 0.10 * missing
         if s > best_score:
             best_score, best = s, cname
-    return best if best_score >= 0.35 else None
+    return best if best_score >= 0.50 else None
 
 
 def main() -> int:
