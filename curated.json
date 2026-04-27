@@ -116,6 +116,16 @@
       "marketPrice": 1.5,
       "state": "Dry"
     },
+    "Ginger pomace dried": {
+      "density": 275.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Ginger pomace wet": {
+      "density": 800.0,
+      "marketPrice": 0.1,
+      "state": "Fresh"
+    },
     "Ginger juice, frozen": {
       "density": 1050.0,
       "marketPrice": 3.4,

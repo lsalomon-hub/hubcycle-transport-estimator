@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-24-marketprice-fix">
+  <meta name="app-version" content="2026-04-24-frozen-fuzzy">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1599,6 +1599,25 @@
   // SKU overrides — loaded at runtime from curated.json via loadCurated()
   let CURATED_SKU_OVERRIDES = {};
 
+  // ═══════════════════════════════════════════════
+  // STATE-DEPENDENT FREIGHT MULTIPLIER
+  // Reefer / cold-chain transport costs significantly more than dry.
+  // Applied on top of base freight rate (sea/road/air) for the input
+  // product's state. T2/T3 use processedState (typically same as input
+  // unless transformation changes it).
+  // ═══════════════════════════════════════════════
+  const STATE_FREIGHT_MULT = {
+    'Dry':    1.00,
+    'Liquid': 1.05,  // tank cleaning, slight surcharge
+    'Paste':  1.05,
+    'Fresh':  1.25,  // refrigerated +25%
+    'Frozen': 1.40,  // reefer container +40%
+  };
+
+  function getFreightMultiplier(state) {
+    return STATE_FREIGHT_MULT[state] || 1.00;
+  }
+
   function pickAltPrice(event, price) {
     event.preventDefault();
     document.getElementById('rawPrice').value = price;
@@ -1654,6 +1673,21 @@
     return null;
   }
 
+  // Token-based fuzzy match — mirrors scripts/refresh_products.py best_match.
+  // Used as a final fallback when free-text product names don't match an Odoo SKU
+  // (e.g. user types "Ginger pomace dried" without selecting from the datalist).
+  const _STOP_WORDS = new Set(['the','a','of','and','with','for','en','de','la','le','grade','quality','extract','extraction']);
+  const _FORM_WORDS = new Set(['whole','powder','crushed','broken','fines','deoiled','granulated','minced','skin','husk','husks','dried','fresh','frozen','concentrate','juice','cake','cakes','pomace','peel','shell','shells','berry','berries','chips','pellets','ht','liquid']);
+
+  function _tokenize(s) {
+    const out = new Set();
+    s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter(Boolean).forEach(w => {
+      out.add(w);
+      if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) out.add(w.slice(0, -1));
+    });
+    return out;
+  }
+
   function lookupCuratedDensity(name) {
     if (!name) return null;
     if (PRODUCTS[name]) return PRODUCTS[name];
@@ -1661,11 +1695,30 @@
     for (const k in PRODUCTS) {
       if (k.toLowerCase() === lower) return PRODUCTS[k];
     }
+    // Token-scored fuzzy match (subset coverage + form keyword bonus)
+    const ot = new Set([..._tokenize(name)].filter(t => !_STOP_WORDS.has(t)));
+    if (ot.size === 0) return null;
+    let best = null, bestScore = 0;
     for (const k in PRODUCTS) {
-      const kl = k.toLowerCase();
-      if (kl.startsWith(lower) && lower.length >= 3) return PRODUCTS[k];
+      const ct = new Set([..._tokenize(k)].filter(t => !_STOP_WORDS.has(t)));
+      if (ct.size === 0) continue;
+      const inter = new Set([...ot].filter(x => ct.has(x)));
+      if (inter.size === 0) continue;
+      const nonForm = [...inter].filter(t => !_FORM_WORDS.has(t));
+      if (nonForm.length === 0) continue;
+      const coverage = inter.size / ct.size;
+      const specificity = inter.size / ot.size;
+      const missing = [...ct].filter(t => !ot.has(t)).length;
+      const ofs = [...ot].filter(t => _FORM_WORDS.has(t));
+      const cfs = [...ct].filter(t => _FORM_WORDS.has(t));
+      let bonus = 0;
+      if (ofs.length && cfs.length) {
+        bonus = [...inter].some(t => _FORM_WORDS.has(t)) ? 0.20 : -0.30;
+      }
+      const s = 0.6 * coverage + 0.4 * specificity + bonus - 0.10 * missing;
+      if (s > bestScore) { bestScore = s; best = k; }
     }
-    return null;
+    return bestScore >= 0.50 ? PRODUCTS[best] : null;
   }
 
   // Populate static datalists (countries) on load
@@ -1711,7 +1764,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-24-marketprice-fix';
+  const APP_VERSION = '2026-04-24-frozen-fuzzy';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
@@ -1843,7 +1896,7 @@
       onDensityChange();
     } else {
       setSkuBadge('productSku', null);
-      // Fallback: curated-only lookup for free-text entries
+      // Fallback: curated lookup (token-fuzzy) for free-text entries (no Odoo code)
       const curated = lookupCuratedDensity(rawValue);
       if (curated) {
         document.getElementById('bulkDensity').value = curated.density;
@@ -1852,7 +1905,13 @@
         for (let i = 0; i < stateEl.options.length; i++) {
           if (stateEl.options[i].value === curated.state) { stateEl.selectedIndex = i; break; }
         }
-        hint.innerHTML = '\u2139 Densit\u00E9 ' + curated.density + ' kg/m\u00B3 (r\u00E9f\u00E9rence) <span class="auto-tag">auto</span>';
+        const outVal = (document.getElementById('outputProduct').value || '').trim();
+        if (!outVal && curated.marketPrice != null) {
+          document.getElementById('marketPrice').value = curated.marketPrice;
+        }
+        const matchedName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === curated);
+        const priceTxt = curated.marketPrice != null ? ' \u2022 Prix march\u00E9 ' + curated.marketPrice.toFixed(2) + ' \u20AC/kg' : '';
+        hint.innerHTML = '\u2139 R\u00E9f. ' + (matchedName || '?') + ' \u2022 Densit\u00E9 ' + curated.density + ' kg/m\u00B3' + priceTxt + ' <span class="auto-tag">auto</span>';
         onDensityChange();
       } else {
         hint.textContent = rawValue.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle' : '';
@@ -2241,10 +2300,15 @@
     }
 
     // 3. Auto-fill freight cost & transit
+    // Apply state-dependent multiplier (Frozen/Fresh require reefer cold chain).
+    const stateEl2 = document.getElementById('productState');
+    const state = stateEl2 ? stateEl2.value : 'Dry';
+    const mult = getFreightMultiplier(state);
+
     if (mode === 'Road') {
       const d = dist || parseFloat(distEl.value) || 0;
       if (d > 0) {
-        costEl.value = estimateRoadCost(d);
+        costEl.value = Math.round(estimateRoadCost(d) * mult);
         transitEl.value = estimateRoadTransit(d);
       }
     } else if (mode === 'Sea') {
@@ -2252,13 +2316,13 @@
       const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
                 || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
       if (rate) {
-        costEl.value = rate.cost;
+        costEl.value = Math.round(rate.cost * mult);
         transitEl.value = rate.transit;
       } else {
         // Fallback: estimate sea freight from distance (~0.38 EUR/km for container)
         const seaDist = parseFloat(distEl.value) || 0;
         if (seaDist > 0) {
-          costEl.value = Math.round(seaDist * 0.38);
+          costEl.value = Math.round(seaDist * 0.38 * mult);
           transitEl.value = Math.round(seaDist / 600) + 5; // ~600 km/day + port time
         }
       }
@@ -2268,7 +2332,7 @@
       const eurPerKg = rate ? rate.eurPerKg : 2.50; // default 2.50 EUR/kg if unknown
       const transit = rate ? rate.transit : Math.max(2, Math.round(parseFloat(distEl.value) / 3000));
       const weight = parseFloat(weightEl.value) || 1000;
-      costEl.value = Math.round(eurPerKg * weight);
+      costEl.value = Math.round(eurPerKg * weight * mult);
       transitEl.value = transit;
     }
 
