@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-24-frozen-fuzzy">
+  <meta name="app-version" content="2026-04-24-postprocess-state">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -803,7 +803,7 @@
               </div>
               <div class="form-group field-auto-edit">
                 <label>Etat</label>
-                <select id="productState" onchange="recalc()">
+                <select id="productState" onchange="onProductStateChange()">
                   <option value="Dry">Dry</option>
                   <option value="Liquid">Liquid</option>
                   <option value="Frozen">Frozen</option>
@@ -1001,6 +1001,17 @@
                   <span class="unit-label">kg/m&sup3;</span>
                 </div>
                 <span class="hint">Utilis&eacute;e pour T2 &amp; T3</span>
+              </div>
+              <div class="form-group">
+                <label>&Eacute;tat apr&egrave;s process</label>
+                <select id="processedState" onchange="onProcessedStateChange()">
+                  <option value="Dry">Dry</option>
+                  <option value="Liquid">Liquid</option>
+                  <option value="Frozen">Frozen</option>
+                  <option value="Fresh">Fresh</option>
+                  <option value="Paste">Paste</option>
+                </select>
+                <span class="hint">D&eacute;termine multiplicateur fret T2 &amp; T3 (reefer/sec)</span>
               </div>
             </div>
           </div>
@@ -1618,6 +1629,30 @@
     return STATE_FREIGHT_MULT[state] || 1.00;
   }
 
+  // Re-compute T1 freight cost when input state changes (Frozen reefer surcharge).
+  // T2/T3 follow processedState — only recompute them if processedState was
+  // also implicitly affected (auto-mirror).
+  function onProductStateChange() {
+    onRouteChange('t1');
+    // Mirror to processedState if user hasn't manually picked one yet
+    // (controlled via _processedStateTouched flag).
+    const ps = document.getElementById('processedState');
+    if (ps && !ps.dataset.userTouched) {
+      ps.value = document.getElementById('productState').value;
+      onRouteChange('t2');
+      onRouteChange('t3');
+    }
+    recalc();
+  }
+
+  function onProcessedStateChange() {
+    const ps = document.getElementById('processedState');
+    if (ps) ps.dataset.userTouched = '1';
+    onRouteChange('t2');
+    onRouteChange('t3');
+    recalc();
+  }
+
   function pickAltPrice(event, price) {
     event.preventDefault();
     document.getElementById('rawPrice').value = price;
@@ -1764,7 +1799,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-24-frozen-fuzzy';
+  const APP_VERSION = '2026-04-24-postprocess-state';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
@@ -1877,6 +1912,9 @@
         for (let i = 0; i < stateEl.options.length; i++) {
           if (stateEl.options[i].value === curated.state) { stateEl.selectedIndex = i; break; }
         }
+        // Mirror to processedState unless user has manually picked one
+        const psEl = document.getElementById('processedState');
+        if (psEl && !psEl.dataset.userTouched) psEl.value = curated.state;
         densityMsg = ' \u2022 Densit\u00E9 ' + curated.density + ' kg/m\u00B3';
       } else {
         densityMsg = ' \u2022 Densit\u00E9 non r\u00E9f\u00E9renc\u00E9e (saisie manuelle)';
@@ -1905,6 +1943,9 @@
         for (let i = 0; i < stateEl.options.length; i++) {
           if (stateEl.options[i].value === curated.state) { stateEl.selectedIndex = i; break; }
         }
+        // Mirror to processedState unless user has manually picked one
+        const psEl = document.getElementById('processedState');
+        if (psEl && !psEl.dataset.userTouched) psEl.value = curated.state;
         const outVal = (document.getElementById('outputProduct').value || '').trim();
         if (!outVal && curated.marketPrice != null) {
           document.getElementById('marketPrice').value = curated.marketPrice;
@@ -1931,6 +1972,16 @@
     const row = selectEl.closest('.process-step');
     if (yieldData) {
       row.querySelector('.step-yield').value = yieldData.defaultYield;
+    }
+    // Drying / Freeze-drying transforms output to Dry — auto-update
+    // processedState unless the user has already picked a value manually.
+    if (/^(Drying|Freeze-drying)/.test(type)) {
+      const ps = document.getElementById('processedState');
+      if (ps && !ps.dataset.userTouched) {
+        ps.value = 'Dry';
+        onRouteChange('t2');
+        onRouteChange('t3');
+      }
     }
     recalcProcess();
   }
@@ -2300,10 +2351,14 @@
     }
 
     // 3. Auto-fill freight cost & transit
-    // Apply state-dependent multiplier (Frozen/Fresh require reefer cold chain).
-    const stateEl2 = document.getElementById('productState');
-    const state = stateEl2 ? stateEl2.value : 'Dry';
-    const mult = getFreightMultiplier(state);
+    // T1 uses productState (raw material). T2/T3 use processedState
+    // (post-transformation), falling back to productState if not set.
+    const stateForLeg = (prefix === 't1')
+      ? (document.getElementById('productState')?.value || 'Dry')
+      : (document.getElementById('processedState')?.value
+          || document.getElementById('productState')?.value
+          || 'Dry');
+    const mult = getFreightMultiplier(stateForLeg);
 
     if (mode === 'Road') {
       const d = dist || parseFloat(distEl.value) || 0;
