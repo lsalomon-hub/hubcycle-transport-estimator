@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-29-densities-tab">
+  <meta name="app-version" content="2026-04-29-multi-leg">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -736,6 +736,83 @@
     .density-state-Frozen { background: rgba(96,165,250,.15); color: #bfdbfe; }
     .density-state-Fresh  { background: rgba(34,197,94,.12); color: #86efac; }
     .density-state-Paste  { background: rgba(249,115,22,.12); color: #fdba74; }
+    /* Collapsible transport card */
+    details.card { padding: 0; }
+    details.card > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+    details.card > summary::-webkit-details-marker { display: none; }
+    details.card > summary::after {
+      content: '▸';
+      margin-left: auto;
+      color: var(--text-dim);
+      transition: transform .2s;
+      font-size: .8rem;
+    }
+    details.card[open] > summary::after { transform: rotate(90deg); }
+    details.card > summary > h3 { margin: 0; }
+    details.card[open] > summary { border-bottom: 1px solid var(--border); }
+    details.card:not([open]) > summary { border-bottom: none; }
+    details.card > .card-body { padding: 1rem 1.25rem; }
+    /* Extra legs */
+    .extra-leg {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr 0.8fr 0.6fr auto;
+      gap: .5rem;
+      align-items: end;
+      margin-top: .5rem;
+      padding: .6rem .75rem;
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .extra-leg input, .extra-leg select {
+      padding: .35rem .5rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: .8rem;
+      font-family: inherit;
+    }
+    .extra-leg label {
+      font-size: .65rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: .03em;
+      margin-bottom: .15rem;
+      display: block;
+    }
+    .add-leg-btn {
+      margin-top: .75rem;
+      padding: .4rem .7rem;
+      background: rgba(59,130,246,.1);
+      border: 1px dashed rgba(59,130,246,.3);
+      border-radius: var(--radius-sm);
+      color: #93c5fd;
+      cursor: pointer;
+      font-size: .75rem;
+      font-weight: 600;
+      width: 100%;
+    }
+    .add-leg-btn:hover { background: rgba(59,130,246,.18); }
+    .extra-legs-summary {
+      margin-top: .5rem;
+      padding: .4rem .7rem;
+      background: rgba(59,130,246,.06);
+      border-radius: 4px;
+      font-size: .75rem;
+      color: var(--text-muted);
+      display: none;
+    }
+    .extra-legs-summary.has-legs { display: block; }
 
     /* Colors for values */
     .c-green { color: var(--green-400) !important; }
@@ -901,12 +978,12 @@
         </div>
 
         <!-- TRANSPORT 1 -->
-        <div class="card">
-          <div class="card-header">
+        <details class="card" open>
+          <summary class="card-header">
             <div class="dot" style="background:var(--blue-500)"></div>
             <h3>Transport 1 &mdash; Fournisseur &rarr; CM / Entrep&ocirc;t</h3>
-            <span class="badge c-blue" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25)" id="t1Badge">0,000 &euro;/kg</span>
-          </div>
+            <span class="badge c-blue" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);margin-left:auto" id="t1Badge">0,000 &euro;/kg</span>
+          </summary>
           <div class="card-body">
             <div class="form-grid">
               <div class="form-group">
@@ -967,8 +1044,11 @@
               <span class="value c-blue" id="t1PerKg">0,000 &euro;</span>
             </div>
             <div class="capacity-info" id="t1CapInfo">40' container &mdash; 26 big bags &times; 140 kg/bb = 3 640 kg (densit&eacute; brute)</div>
+            <div id="t1Legs"></div>
+            <button class="add-leg-btn" onclick="addExtraLeg('t1')">+ Ajouter une &eacute;tape (ex. routier vers port)</button>
+            <div class="extra-legs-summary" id="t1LegsSummary"></div>
           </div>
-        </div>
+        </details>
 
         <!-- MANUFACTURING / PROCESS -->
         <div class="card">
@@ -1057,12 +1137,12 @@
         </div>
 
         <!-- TRANSPORT 2 -->
-        <div class="card">
-          <div class="card-header">
+        <details class="card" open>
+          <summary class="card-header">
             <div class="dot" style="background:var(--amber-500)"></div>
             <h3>Transport 2 &mdash; CM &rarr; Entrep&ocirc;t Hubcycle</h3>
-            <span class="badge c-amber" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25)" id="t2Badge">0,000 &euro;/kg</span>
-          </div>
+            <span class="badge c-amber" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);margin-left:auto" id="t2Badge">0,000 &euro;/kg</span>
+          </summary>
           <div class="card-body">
             <div class="form-grid">
               <div class="form-group">
@@ -1122,16 +1202,19 @@
               <span class="label">Transport 2 / kg</span>
               <span class="value c-amber" id="t2PerKg">0,000 &euro;</span>
             </div>
+            <div id="t2Legs"></div>
+            <button class="add-leg-btn" onclick="addExtraLeg('t2')">+ Ajouter une &eacute;tape</button>
+            <div class="extra-legs-summary" id="t2LegsSummary"></div>
           </div>
-        </div>
+        </details>
 
         <!-- TRANSPORT 3 -->
-        <div class="card">
-          <div class="card-header">
+        <details class="card" open>
+          <summary class="card-header">
             <div class="dot" style="background:var(--pink-400)"></div>
             <h3>Transport 3 &mdash; Entrep&ocirc;t &rarr; Client</h3>
-            <span class="badge c-pink" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.25)" id="t3Badge">0,000 &euro;/kg</span>
-          </div>
+            <span class="badge c-pink" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.25);margin-left:auto" id="t3Badge">0,000 &euro;/kg</span>
+          </summary>
           <div class="card-body">
             <div class="form-grid">
               <div class="form-group">
@@ -1200,8 +1283,11 @@
               <span class="label">Transport 3 / kg</span>
               <span class="value c-pink" id="t3PerKg">0,000 &euro;</span>
             </div>
+            <div id="t3Legs"></div>
+            <button class="add-leg-btn" onclick="addExtraLeg('t3')">+ Ajouter une &eacute;tape</button>
+            <div class="extra-legs-summary" id="t3LegsSummary"></div>
           </div>
-        </div>
+        </details>
 
         <!-- OTHER COSTS -->
         <div class="card">
@@ -1738,6 +1824,91 @@
   }
 
   // ═══════════════════════════════════════════════
+  // EXTRA TRANSPORT LEGS — multi-step (e.g. Road + Sea + Road)
+  // Each transport (t1/t2/t3) can have additional legs whose costs are
+  // summed into the primary cost. Legs are pure manual entry: name, mode,
+  // cost (€), transit (j). State multiplier already applied to primary.
+  // ═══════════════════════════════════════════════
+  const EXTRA_LEGS = { t1: [], t2: [], t3: [] };
+  let _legCounter = 0;
+
+  function addExtraLeg(prefix, preset) {
+    _legCounter++;
+    const id = prefix + '-leg-' + _legCounter;
+    EXTRA_LEGS[prefix].push({ id, name: preset?.name || '', mode: preset?.mode || 'Road', cost: preset?.cost || 0, transit: preset?.transit || 0 });
+    renderExtraLegs(prefix);
+    recalc();
+  }
+
+  function removeExtraLeg(prefix, id) {
+    EXTRA_LEGS[prefix] = EXTRA_LEGS[prefix].filter(l => l.id !== id);
+    renderExtraLegs(prefix);
+    recalc();
+  }
+
+  function updateExtraLeg(prefix, id, field, value) {
+    const leg = EXTRA_LEGS[prefix].find(l => l.id === id);
+    if (!leg) return;
+    leg[field] = (field === 'cost' || field === 'transit') ? parseFloat(value) || 0 : value;
+    if (field === 'cost' || field === 'transit') {
+      // Update summary without re-render to keep input focus
+      updateLegsSummary(prefix);
+      recalc();
+    }
+  }
+
+  function renderExtraLegs(prefix) {
+    const container = document.getElementById(prefix + 'Legs');
+    if (!container) return;
+    container.innerHTML = EXTRA_LEGS[prefix].map(leg => `
+      <div class="extra-leg" data-leg-id="${leg.id}">
+        <div>
+          <label>Description</label>
+          <input type="text" placeholder="ex. Usine → port" value="${leg.name.replace(/"/g, '&quot;')}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'name', this.value)">
+        </div>
+        <div>
+          <label>Mode</label>
+          <select onchange="updateExtraLeg('${prefix}', '${leg.id}', 'mode', this.value)">
+            <option value="Road"${leg.mode==='Road'?' selected':''}>Road</option>
+            <option value="Sea"${leg.mode==='Sea'?' selected':''}>Sea</option>
+            <option value="Air"${leg.mode==='Air'?' selected':''}>Air</option>
+            <option value="Rail"${leg.mode==='Rail'?' selected':''}>Rail</option>
+          </select>
+        </div>
+        <div>
+          <label>Coût total (€)</label>
+          <input type="number" step="10" min="0" value="${leg.cost}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'cost', this.value)">
+        </div>
+        <div>
+          <label>Transit (j)</label>
+          <input type="number" step="1" min="0" value="${leg.transit}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'transit', this.value)">
+        </div>
+        <button onclick="removeExtraLeg('${prefix}', '${leg.id}')" title="Supprimer" style="background:transparent;border:none;color:var(--red-400);font-size:1.1rem;cursor:pointer;padding:0 .3rem">×</button>
+      </div>
+    `).join('');
+    updateLegsSummary(prefix);
+  }
+
+  function updateLegsSummary(prefix) {
+    const sumEl = document.getElementById(prefix + 'LegsSummary');
+    if (!sumEl) return;
+    const legs = EXTRA_LEGS[prefix];
+    const total = legs.reduce((s, l) => s + (l.cost || 0), 0);
+    const transitSum = legs.reduce((s, l) => s + (l.transit || 0), 0);
+    if (legs.length === 0) {
+      sumEl.classList.remove('has-legs');
+      sumEl.textContent = '';
+    } else {
+      sumEl.classList.add('has-legs');
+      sumEl.innerHTML = `<strong>${legs.length} étape${legs.length>1?'s':''} supplémentaire${legs.length>1?'s':''}</strong> · Total étapes : ${total.toLocaleString('fr-FR')} € · Transit ajouté : ${transitSum} j`;
+    }
+  }
+
+  function getExtraLegsCost(prefix) {
+    return EXTRA_LEGS[prefix].reduce((s, l) => s + (l.cost || 0), 0);
+  }
+
+  // ═══════════════════════════════════════════════
   // VIEW SWITCHING — Estimator vs Densités reference
   // ═══════════════════════════════════════════════
   let _densitySort = { col: 'name', dir: 'asc' };
@@ -1940,7 +2111,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-29-densities-tab';
+  const APP_VERSION = '2026-04-29-multi-leg';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
@@ -2559,9 +2730,14 @@
 
   function recalc() {
     const t1w = v('t1Weight'), t2w = v('t2Weight'), t3w = v('t3Weight');
-    const t1perkg = t1w > 0 ? v('t1Cost') / t1w : 0;
-    const t2perkg = t2w > 0 ? v('t2Cost') / t2w : 0;
-    const t3perkg = t3w > 0 ? v('t3Cost') / t3w : 0;
+    // Primary leg + sum of extra legs (each prefix). Extra legs share the
+    // primary's weight, so per-kg cost = (primaryCost + extrasCost) / weight.
+    const t1Total = v('t1Cost') + getExtraLegsCost('t1');
+    const t2Total = v('t2Cost') + getExtraLegsCost('t2');
+    const t3Total = v('t3Cost') + getExtraLegsCost('t3');
+    const t1perkg = t1w > 0 ? t1Total / t1w : 0;
+    const t2perkg = t2w > 0 ? t2Total / t2w : 0;
+    const t3perkg = t3w > 0 ? t3Total / t3w : 0;
     const totalTransport = t1perkg + t2perkg + t3perkg;
 
     document.getElementById('t1PerKg').textContent = fmt(t1perkg) + ' \u20AC';
