@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-29-multi-leg">
+  <meta name="app-version" content="2026-04-29-leg-autocalc">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -762,18 +762,20 @@
     details.card:not([open]) > summary { border-bottom: none; }
     details.card > .card-body { padding: 1rem 1.25rem; }
     /* Extra legs */
-    .extra-leg {
-      display: grid;
-      grid-template-columns: 1.4fr 0.8fr 0.8fr 0.6fr auto;
-      gap: .5rem;
-      align-items: end;
+    .extra-leg-card {
       margin-top: .5rem;
-      padding: .6rem .75rem;
+      padding: .7rem .85rem;
       background: var(--bg-input);
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
     }
-    .extra-leg input, .extra-leg select {
+    .extra-leg-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr 0.9fr 0.7fr auto;
+      gap: .5rem;
+      align-items: end;
+    }
+    .extra-leg-card input, .extra-leg-card select {
       padding: .35rem .5rem;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -782,7 +784,7 @@
       font-size: .8rem;
       font-family: inherit;
     }
-    .extra-leg label {
+    .extra-leg-card label {
       font-size: .65rem;
       text-transform: uppercase;
       color: var(--text-muted);
@@ -1799,6 +1801,40 @@
     return STATE_FREIGHT_MULT[state] || 1.00;
   }
 
+  // Pure freight estimator — takes route + mode + weight + state, returns
+  // {distance, cost, transit}. Used by both primary onRouteChange() and
+  // extra-leg auto-calculation. Returns nulls when data is insufficient.
+  function estimateFreight(origin, dest, mode, weight, state) {
+    if (!origin || !dest) return { distance: 0, cost: 0, transit: 0 };
+    const dist = lookupDistance(origin, dest, mode);
+    const mult = getFreightMultiplier(state || 'Dry');
+    let cost = 0, transit = 0;
+    if (mode === 'Road' || mode === 'Rail') {
+      if (dist > 0) {
+        cost = Math.round(estimateRoadCost(dist) * mult);
+        transit = estimateRoadTransit(dist);
+      }
+    } else if (mode === 'Sea') {
+      const o = norm(origin), d = norm(dest);
+      const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
+                || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
+      if (rate) {
+        cost = Math.round(rate.cost * mult);
+        transit = rate.transit;
+      } else if (dist > 0) {
+        cost = Math.round(dist * 0.38 * mult);
+        transit = Math.round(dist / 600) + 5;
+      }
+    } else if (mode === 'Air') {
+      const rate = AIR_RATES[norm(origin)+'|'+norm(dest)] || AIR_RATES[origin+'|'+dest];
+      const eurPerKg = rate ? rate.eurPerKg : 2.50;
+      const w = parseFloat(weight) || 1000;
+      cost = Math.round(eurPerKg * w * mult);
+      transit = rate ? rate.transit : Math.max(2, Math.round(dist / 3000));
+    }
+    return { distance: dist, cost, transit };
+  }
+
   // Re-compute T1 freight cost when input state changes (Frozen reefer surcharge).
   // T2/T3 follow processedState — only recompute them if processedState was
   // also implicitly affected (auto-mirror).
@@ -1835,7 +1871,36 @@
   function addExtraLeg(prefix, preset) {
     _legCounter++;
     const id = prefix + '-leg-' + _legCounter;
-    EXTRA_LEGS[prefix].push({ id, name: preset?.name || '', mode: preset?.mode || 'Road', cost: preset?.cost || 0, transit: preset?.transit || 0 });
+    EXTRA_LEGS[prefix].push({
+      id,
+      name: preset?.name || '',
+      origin: preset?.origin || '',
+      dest: preset?.dest || '',
+      mode: preset?.mode || 'Road',
+      distance: preset?.distance || 0,
+      cost: preset?.cost || 0,
+      transit: preset?.transit || 0,
+      manualCost: false,
+    });
+    renderExtraLegs(prefix);
+    recalc();
+  }
+
+  // Re-run the freight estimator for a given leg using its current
+  // origin/dest/mode and the parent transport's weight + appropriate state.
+  function autoCalcLeg(prefix, id) {
+    const leg = EXTRA_LEGS[prefix].find(l => l.id === id);
+    if (!leg) return;
+    const weight = parseFloat(document.getElementById(prefix + 'Weight')?.value) || 1000;
+    const state = (prefix === 't1')
+      ? (document.getElementById('productState')?.value || 'Dry')
+      : (document.getElementById('processedState')?.value
+          || document.getElementById('productState')?.value || 'Dry');
+    const f = estimateFreight(leg.origin, leg.dest, leg.mode, weight, state);
+    leg.distance = f.distance;
+    leg.cost = f.cost;
+    leg.transit = f.transit;
+    leg.manualCost = false;
     renderExtraLegs(prefix);
     recalc();
   }
@@ -1860,33 +1925,60 @@
   function renderExtraLegs(prefix) {
     const container = document.getElementById(prefix + 'Legs');
     if (!container) return;
-    container.innerHTML = EXTRA_LEGS[prefix].map(leg => `
-      <div class="extra-leg" data-leg-id="${leg.id}">
-        <div>
-          <label>Description</label>
-          <input type="text" placeholder="ex. Usine → port" value="${leg.name.replace(/"/g, '&quot;')}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'name', this.value)">
+    container.innerHTML = EXTRA_LEGS[prefix].map(leg => {
+      const distTxt = leg.distance > 0 ? `${Math.round(leg.distance).toLocaleString('fr-FR')} km` : '—';
+      const esc = s => String(s).replace(/"/g, '&quot;');
+      return `
+      <div class="extra-leg-card" data-leg-id="${leg.id}">
+        <div class="extra-leg-row">
+          <div>
+            <label>Description</label>
+            <input type="text" placeholder="ex. Usine → port" value="${esc(leg.name)}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'name', this.value)">
+          </div>
+          <div>
+            <label>Origine</label>
+            <input type="text" list="countryList" placeholder="Pays" value="${esc(leg.origin)}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'origin', this.value)" onchange="autoCalcLeg('${prefix}', '${leg.id}')">
+          </div>
+          <div>
+            <label>Destination</label>
+            <input type="text" list="countryList" placeholder="Pays" value="${esc(leg.dest)}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'dest', this.value)" onchange="autoCalcLeg('${prefix}', '${leg.id}')">
+          </div>
+          <div>
+            <label>Mode</label>
+            <select onchange="updateExtraLeg('${prefix}', '${leg.id}', 'mode', this.value); autoCalcLeg('${prefix}', '${leg.id}')">
+              <option value="Road"${leg.mode==='Road'?' selected':''}>Road</option>
+              <option value="Sea"${leg.mode==='Sea'?' selected':''}>Sea</option>
+              <option value="Air"${leg.mode==='Air'?' selected':''}>Air</option>
+              <option value="Rail"${leg.mode==='Rail'?' selected':''}>Rail</option>
+            </select>
+          </div>
+          <button onclick="removeExtraLeg('${prefix}', '${leg.id}')" title="Supprimer" style="background:transparent;border:none;color:var(--red-400);font-size:1.1rem;cursor:pointer;padding:0 .3rem;align-self:end">×</button>
         </div>
-        <div>
-          <label>Mode</label>
-          <select onchange="updateExtraLeg('${prefix}', '${leg.id}', 'mode', this.value)">
-            <option value="Road"${leg.mode==='Road'?' selected':''}>Road</option>
-            <option value="Sea"${leg.mode==='Sea'?' selected':''}>Sea</option>
-            <option value="Air"${leg.mode==='Air'?' selected':''}>Air</option>
-            <option value="Rail"${leg.mode==='Rail'?' selected':''}>Rail</option>
-          </select>
+        <div class="extra-leg-row" style="grid-template-columns:0.8fr 0.8fr 0.8fr auto;gap:.5rem;margin-top:.4rem">
+          <div>
+            <label>Distance (km)</label>
+            <input type="number" step="10" min="0" value="${leg.distance}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'distance', this.value)" style="background:rgba(113,113,122,.08);color:var(--text-muted)">
+          </div>
+          <div>
+            <label>Coût total (€)</label>
+            <input type="number" step="10" min="0" value="${leg.cost}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'cost', this.value); markLegManual('${prefix}', '${leg.id}')">
+          </div>
+          <div>
+            <label>Transit (j)</label>
+            <input type="number" step="1" min="0" value="${leg.transit}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'transit', this.value)">
+          </div>
+          <button onclick="autoCalcLeg('${prefix}', '${leg.id}')" title="Recalculer auto depuis origine/destination" style="padding:.3rem .6rem;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:4px;color:#86efac;cursor:pointer;font-size:.7rem;font-weight:600;align-self:end;white-space:nowrap">↻ Auto</button>
         </div>
-        <div>
-          <label>Coût total (€)</label>
-          <input type="number" step="10" min="0" value="${leg.cost}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'cost', this.value)">
-        </div>
-        <div>
-          <label>Transit (j)</label>
-          <input type="number" step="1" min="0" value="${leg.transit}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'transit', this.value)">
-        </div>
-        <button onclick="removeExtraLeg('${prefix}', '${leg.id}')" title="Supprimer" style="background:transparent;border:none;color:var(--red-400);font-size:1.1rem;cursor:pointer;padding:0 .3rem">×</button>
+        <div style="margin-top:.3rem;font-size:.68rem;color:var(--text-dim)">${distTxt} · ${leg.origin || '?'} → ${leg.dest || '?'} (${leg.mode})${leg.manualCost ? ' · <span style="color:#fcd34d">coût modifié manuellement</span>' : ''}</div>
       </div>
-    `).join('');
+      `;
+    }).join('');
     updateLegsSummary(prefix);
+  }
+
+  function markLegManual(prefix, id) {
+    const leg = EXTRA_LEGS[prefix].find(l => l.id === id);
+    if (leg) leg.manualCost = true;
   }
 
   function updateLegsSummary(prefix) {
@@ -2111,7 +2203,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-29-multi-leg';
+  const APP_VERSION = '2026-04-29-leg-autocalc';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
