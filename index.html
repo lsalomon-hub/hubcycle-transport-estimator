@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-29-leg-autocalc">
+  <meta name="app-version" content="2026-04-29-scenarios">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -815,6 +815,100 @@
       display: none;
     }
     .extra-legs-summary.has-legs { display: block; }
+    /* Scenario tabs */
+    .scenario-bar {
+      display: flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .5rem .75rem;
+      background: var(--bg-input);
+      border-bottom: 1px solid var(--border);
+      margin: 0 -1.5rem 1rem -1.5rem;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+    }
+    .scenario-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .35rem .7rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: .8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .scenario-tab.active {
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.4);
+      color: var(--green-400);
+      font-weight: 600;
+    }
+    .scenario-tab .close-x {
+      font-size: .7rem;
+      opacity: .6;
+      padding: 0 .15rem;
+      border-radius: 3px;
+    }
+    .scenario-tab .close-x:hover { opacity: 1; background: rgba(239,68,68,.2); color: #fca5a5; }
+    .scenario-action {
+      padding: .35rem .65rem;
+      background: rgba(96,165,250,.1);
+      border: 1px solid rgba(96,165,250,.3);
+      border-radius: 5px;
+      cursor: pointer;
+      color: #93c5fd;
+      font-size: .75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .scenario-action:hover { background: rgba(96,165,250,.2); }
+    .compare-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 100;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem;
+      overflow: auto;
+    }
+    .compare-modal.open { display: flex; }
+    .compare-modal-content {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      max-width: 95vw;
+      width: 100%;
+      border: 1px solid var(--border);
+    }
+    .compare-modal-content h2 { margin-top: 0; }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    .compare-table th, .compare-table td {
+      padding: .5rem .75rem;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+    }
+    .compare-table th:first-child, .compare-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .compare-table thead th {
+      background: var(--bg-input);
+      color: var(--text);
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+    .compare-table tr.row-highlight td { background: rgba(34,197,94,.06); font-weight: 700; }
 
     /* Colors for values */
     .c-green { color: var(--green-400) !important; }
@@ -902,6 +996,26 @@
         <div class="odoo-status" id="odooStatus">
           <span class="odoo-status-text" id="odooStatusText">Chargement des produits Odoo&hellip;</span>
           <button class="odoo-refresh-btn" id="odooRefreshBtn" onclick="manualRefresh()" title="Recharger products.json depuis le serveur">&#x21bb; Rafra&icirc;chir</button>
+        </div>
+
+        <!-- SCENARIO TABS -->
+        <div class="scenario-bar" id="scenarioBar">
+          <span style="font-size:.75rem;color:var(--text-muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-right:.5rem">Sc&eacute;narios</span>
+          <div id="scenarioTabs" style="display:flex;gap:.25rem;flex-wrap:wrap;flex:1"></div>
+          <button class="scenario-action" onclick="newScenario()" title="Nouveau sc&eacute;nario vide">+ Nouveau</button>
+          <button class="scenario-action" onclick="duplicateScenario()" title="Dupliquer ce sc&eacute;nario">&#x29C9; Dupliquer</button>
+          <button class="scenario-action" onclick="openCompareModal()" title="Comparer tous les sc&eacute;narios">&#x2630; Comparer</button>
+        </div>
+
+        <!-- COMPARE MODAL -->
+        <div class="compare-modal" id="compareModal" onclick="if(event.target===this)closeCompareModal()">
+          <div class="compare-modal-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <h2 style="margin:0">Comparaison des sc&eacute;narios</h2>
+              <button class="scenario-action" onclick="closeCompareModal()">&times; Fermer</button>
+            </div>
+            <div id="compareTableContainer"></div>
+          </div>
         </div>
 
         <!-- PRODUCT -->
@@ -1860,6 +1974,243 @@
   }
 
   // ═══════════════════════════════════════════════
+  // SCENARIOS — duplicate, switch, compare
+  // Each scenario stores all input/select values + extra legs + process
+  // steps. Persisted to localStorage between sessions.
+  // ═══════════════════════════════════════════════
+  const SCENARIO_FIELDS = [
+    'productName','productState','bulkDensity','rawPrice','rawCurrency',
+    't1Incoterm','t1Origin','t1Dest','t1Mode','t1Volume','t1Distance','t1Cost','t1Transit','t1Weight','bbLayers',
+    't2Origin','t2Dest','t2Mode','t2Distance','t2Cost','t2Transit','t2Weight',
+    't3Incoterm','t3Dest','t3Client','t3Mode','t3Distance','t3Cost','t3Transit','t3Weight',
+    'outputProduct','processedDensity','processedState','marketPrice',
+    'analyses','storage','importTax','exportTax','insurance','targetMargin',
+    'eurUsdRate',
+  ];
+
+  function captureScenarioState() {
+    const data = {};
+    SCENARIO_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    // Capture process steps
+    data._steps = Array.from(document.querySelectorAll('.process-step')).map(s => ({
+      type: s.querySelector('.step-type')?.value || '',
+      yld: s.querySelector('.step-yield')?.value || '100',
+      cost: s.querySelector('.step-cost')?.value || '0',
+    }));
+    // Capture extra legs
+    data._legs = JSON.parse(JSON.stringify(EXTRA_LEGS));
+    return data;
+  }
+
+  function applyScenarioState(data) {
+    if (!data) return;
+    SCENARIO_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
+    // Restore process steps: clear then add each
+    if (Array.isArray(data._steps) && data._steps.length > 0) {
+      const container = document.getElementById('processSteps');
+      if (container) {
+        // Reset to one empty step
+        while (container.children.length > 1) container.lastChild.remove();
+        data._steps.forEach((s, i) => {
+          if (i > 0) addProcessStep();
+          const row = container.children[i];
+          if (row) {
+            row.querySelector('.step-type').value = s.type;
+            row.querySelector('.step-yield').value = s.yld;
+            row.querySelector('.step-cost').value = s.cost;
+          }
+        });
+        recalcProcess();
+      }
+    }
+    // Restore extra legs
+    if (data._legs) {
+      ['t1','t2','t3'].forEach(p => {
+        EXTRA_LEGS[p] = (data._legs[p] || []).map(l => ({...l}));
+        renderExtraLegs(p);
+      });
+    }
+    recalc();
+  }
+
+  let SCENARIOS = [];
+  let CURRENT_SCENARIO_INDEX = 0;
+  const SCENARIOS_STORAGE_KEY = 'dealEstimator.scenarios.v1';
+
+  function loadScenariosFromStorage() {
+    try {
+      const raw = localStorage.getItem(SCENARIOS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        SCENARIOS = parsed.scenarios || [];
+        CURRENT_SCENARIO_INDEX = parsed.current || 0;
+      }
+    } catch (e) { console.warn('Failed to load scenarios', e); }
+    if (SCENARIOS.length === 0) {
+      SCENARIOS = [{ name: 'Scénario 1', data: null }];
+      CURRENT_SCENARIO_INDEX = 0;
+    }
+  }
+
+  function saveScenariosToStorage() {
+    try {
+      localStorage.setItem(SCENARIOS_STORAGE_KEY,
+        JSON.stringify({ scenarios: SCENARIOS, current: CURRENT_SCENARIO_INDEX }));
+    } catch (e) { console.warn('Failed to save scenarios', e); }
+  }
+
+  function snapshotCurrentScenario() {
+    if (SCENARIOS[CURRENT_SCENARIO_INDEX]) {
+      SCENARIOS[CURRENT_SCENARIO_INDEX].data = captureScenarioState();
+      saveScenariosToStorage();
+    }
+  }
+
+  function switchScenario(index) {
+    if (index === CURRENT_SCENARIO_INDEX) return;
+    snapshotCurrentScenario();
+    CURRENT_SCENARIO_INDEX = index;
+    applyScenarioState(SCENARIOS[index]?.data);
+    renderScenarioTabs();
+    saveScenariosToStorage();
+  }
+
+  function newScenario() {
+    snapshotCurrentScenario();
+    SCENARIOS.push({ name: 'Scénario ' + (SCENARIOS.length + 1), data: null });
+    CURRENT_SCENARIO_INDEX = SCENARIOS.length - 1;
+    // Don't apply state — keep current form (acts as starter template)
+    SCENARIOS[CURRENT_SCENARIO_INDEX].data = captureScenarioState();
+    renderScenarioTabs();
+    saveScenariosToStorage();
+  }
+
+  function duplicateScenario() {
+    snapshotCurrentScenario();
+    const src = SCENARIOS[CURRENT_SCENARIO_INDEX];
+    const copy = { name: src.name + ' (copie)', data: JSON.parse(JSON.stringify(src.data)) };
+    SCENARIOS.splice(CURRENT_SCENARIO_INDEX + 1, 0, copy);
+    CURRENT_SCENARIO_INDEX = CURRENT_SCENARIO_INDEX + 1;
+    renderScenarioTabs();
+    saveScenariosToStorage();
+  }
+
+  function deleteScenario(index) {
+    if (SCENARIOS.length <= 1) { alert('Au moins un scénario est requis.'); return; }
+    if (!confirm('Supprimer "' + SCENARIOS[index].name + '" ?')) return;
+    SCENARIOS.splice(index, 1);
+    if (CURRENT_SCENARIO_INDEX >= SCENARIOS.length) CURRENT_SCENARIO_INDEX = SCENARIOS.length - 1;
+    applyScenarioState(SCENARIOS[CURRENT_SCENARIO_INDEX].data);
+    renderScenarioTabs();
+    saveScenariosToStorage();
+  }
+
+  function renameScenario(index) {
+    const newName = prompt('Renommer le scénario :', SCENARIOS[index].name);
+    if (newName) {
+      SCENARIOS[index].name = newName.trim();
+      renderScenarioTabs();
+      saveScenariosToStorage();
+    }
+  }
+
+  function renderScenarioTabs() {
+    const container = document.getElementById('scenarioTabs');
+    if (!container) return;
+    container.innerHTML = SCENARIOS.map((s, i) => {
+      const active = i === CURRENT_SCENARIO_INDEX ? ' active' : '';
+      const esc = String(s.name).replace(/"/g, '&quot;');
+      return `<span class="scenario-tab${active}" onclick="switchScenario(${i})" ondblclick="renameScenario(${i})" title="Double-clic pour renommer">${esc}<span class="close-x" onclick="event.stopPropagation();deleteScenario(${i})">&times;</span></span>`;
+    }).join('');
+  }
+
+  // Scenario auto-save: every 30 s + on visibility change. Avoids losing
+  // edits on tab close.
+  function setupScenarioAutoSave() {
+    setInterval(snapshotCurrentScenario, 30000);
+    window.addEventListener('beforeunload', snapshotCurrentScenario);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) snapshotCurrentScenario();
+    });
+  }
+
+  // Compute key metrics for a scenario (cost price, margin, etc.) without
+  // mutating the live form. Re-applies state, runs recalc, captures values.
+  function computeScenarioMetrics(scenario) {
+    const before = captureScenarioState();
+    try {
+      applyScenarioState(scenario.data);
+      // Read computed displayed values
+      const get = id => document.getElementById(id)?.textContent?.trim() || '';
+      return {
+        product: document.getElementById('productName')?.value || '—',
+        rawPrice: document.getElementById('rawPrice')?.value || '0',
+        marketPrice: document.getElementById('marketPrice')?.value || '0',
+        t1: get('t1PerKg'),
+        t2: get('t2PerKg'),
+        t3: get('t3PerKg'),
+        totalTransport: get('rTotalTransport'),
+        rm: get('rRM'),
+        manuf: get('rManuf'),
+        yieldDisp: get('rYield'),
+        storage: get('rStorage'),
+        taxIns: get('rTaxIns'),
+        costPrice: get('rCostPrice'),
+        target20: get('rTarget20'),
+        target30: get('rTarget30'),
+        margin20: get('rMargin20'),
+        margin30: get('rMargin30'),
+        costVsMarket: get('rCostVsMarket'),
+      };
+    } finally {
+      applyScenarioState(before);
+    }
+  }
+
+  function openCompareModal() {
+    snapshotCurrentScenario();
+    const metrics = SCENARIOS.map(s => ({ name: s.name, m: computeScenarioMetrics(s) }));
+    const rows = [
+      ['Produit', m => m.product],
+      ['Prix achat (RM €/kg)', m => m.rawPrice],
+      ['Prix marché (€/kg)', m => m.marketPrice],
+      ['T1 (€/kg)', m => m.t1],
+      ['T2 (€/kg)', m => m.t2],
+      ['T3 (€/kg)', m => m.t3],
+      ['Transport total', m => m.totalTransport],
+      ['Matière première', m => m.rm],
+      ['Manufacturing', m => m.manuf],
+      ['× 1/Yield', m => m.yieldDisp],
+      ['Stockage', m => m.storage],
+      ['Taxes + Assurance', m => m.taxIns],
+      ['Prix de revient', m => m.costPrice, true],
+      ['Sell target 20%', m => m.target20],
+      ['Sell target 30%', m => m.target30],
+      ['Marge à 20%', m => m.margin20],
+      ['Marge à 30%', m => m.margin30],
+      ['Coût vs marché', m => m.costVsMarket],
+    ];
+    const headerHtml = '<th>Métrique</th>' + metrics.map(s => '<th>' + s.name.replace(/</g, '&lt;') + '</th>').join('');
+    const bodyHtml = rows.map(([label, fn, hi]) => {
+      const cls = hi ? ' class="row-highlight"' : '';
+      return '<tr' + cls + '><td>' + label + '</td>' + metrics.map(s => '<td>' + (fn(s.m) || '—') + '</td>').join('') + '</tr>';
+    }).join('');
+    document.getElementById('compareTableContainer').innerHTML =
+      '<table class="compare-table"><thead><tr>' + headerHtml + '</tr></thead><tbody>' + bodyHtml + '</tbody></table>';
+    document.getElementById('compareModal').classList.add('open');
+  }
+
+  function closeCompareModal() {
+    document.getElementById('compareModal').classList.remove('open');
+  }
+
+  // ═══════════════════════════════════════════════
   // EXTRA TRANSPORT LEGS — multi-step (e.g. Road + Sea + Road)
   // Each transport (t1/t2/t3) can have additional legs whose costs are
   // summed into the primary cost. Legs are pure manual entry: name, mode,
@@ -2203,7 +2554,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-29-leg-autocalc';
+  const APP_VERSION = '2026-04-29-scenarios';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
@@ -2980,6 +3331,15 @@
 
   initDataLists();
   startOdooRefreshLoop();
+
+  // Initialize scenarios from localStorage. Apply only if data exists —
+  // otherwise the form keeps its HTML defaults.
+  loadScenariosFromStorage();
+  renderScenarioTabs();
+  if (SCENARIOS[CURRENT_SCENARIO_INDEX]?.data) {
+    applyScenarioState(SCENARIOS[CURRENT_SCENARIO_INDEX].data);
+  }
+  setupScenarioAutoSave();
 
   // Auto-fetch EUR/USD rate on load
   fetch('https://open.er-api.com/v6/latest/EUR')
