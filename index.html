@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-24-postprocess-state">
+  <meta name="app-version" content="2026-04-29-densities-tab">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -699,6 +699,43 @@
       cursor: pointer;
     }
     .price-alt:hover { color: #bfdbfe; }
+    .density-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+      font-family: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+    }
+    .density-table thead th {
+      position: sticky; top: 0;
+      background: var(--bg-input);
+      padding: .65rem .75rem;
+      text-align: left;
+      font-weight: 700;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border);
+      z-index: 1;
+    }
+    .density-table tbody td {
+      padding: .5rem .75rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .density-table tbody tr:hover { background: rgba(148,163,184,.05); }
+    .density-state-pill {
+      display: inline-block;
+      padding: .15rem .5rem;
+      border-radius: 4px;
+      font-size: .68rem;
+      font-weight: 600;
+    }
+    .density-state-Dry    { background: rgba(148,163,184,.12); color: #cbd5e1; }
+    .density-state-Liquid { background: rgba(59,130,246,.15); color: #93c5fd; }
+    .density-state-Frozen { background: rgba(96,165,250,.15); color: #bfdbfe; }
+    .density-state-Fresh  { background: rgba(34,197,94,.12); color: #86efac; }
+    .density-state-Paste  { background: rgba(249,115,22,.12); color: #fdba74; }
 
     /* Colors for values */
     .c-green { color: var(--green-400) !important; }
@@ -749,8 +786,10 @@
   <!-- ═══ MAIN ═══ -->
   <div class="main">
     <div class="topbar">
-      <h1>Deal Estimator</h1>
+      <h1 id="topbarTitle">Deal Estimator</h1>
       <div class="topbar-actions">
+        <button class="btn btn-ghost" id="navEstimator" onclick="switchView('estimator')">Estimator</button>
+        <button class="btn btn-ghost" id="navDensities" onclick="switchView('densities')">Densit&eacute;s</button>
         <button class="btn btn-ghost" onclick="resetForm()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 105.68-9.2L1 10"/></svg>
           Reset
@@ -762,7 +801,7 @@
       </div>
     </div>
 
-    <div class="content">
+    <div class="content" id="estimatorView">
       <div class="forms-col">
 
         <!-- LEGEND BAR -->
@@ -1415,6 +1454,51 @@
         </div>
       </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- DENSITIES VIEW — full reference table           -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="content" id="densitiesView" style="display:none;flex-direction:column;gap:1rem">
+      <div class="card">
+        <div class="card-header">
+          <div class="dot" style="background:var(--green-500)"></div>
+          <h3>R&eacute;f&eacute;rentiel densit&eacute;s &amp; prix march&eacute;</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+            <input type="text" id="densitySearch" placeholder="Filtrer par nom&hellip;" oninput="renderDensitiesTable()" style="flex:1;min-width:200px;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.85rem;font-family:inherit">
+            <select id="densityStateFilter" onchange="renderDensitiesTable()" style="padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.85rem;font-family:inherit">
+              <option value="">Tous les &eacute;tats</option>
+              <option value="Dry">Dry</option>
+              <option value="Liquid">Liquid</option>
+              <option value="Frozen">Frozen</option>
+              <option value="Fresh">Fresh</option>
+              <option value="Paste">Paste</option>
+            </select>
+            <span style="font-size:.78rem;color:var(--text-dim)" id="densityCount"></span>
+          </div>
+          <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
+            <table class="density-table" id="densitiesTable">
+              <thead>
+                <tr>
+                  <th onclick="sortDensities('name')" style="cursor:pointer">Produit (r&eacute;f&eacute;rence) &uarr;&darr;</th>
+                  <th onclick="sortDensities('state')" style="cursor:pointer">&Eacute;tat</th>
+                  <th onclick="sortDensities('density')" style="cursor:pointer;text-align:right">Densit&eacute; (kg/m&sup3;)</th>
+                  <th onclick="sortDensities('marketPrice')" style="cursor:pointer;text-align:right">Prix march&eacute; (&euro;/kg)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top:1rem;padding:.7rem;background:var(--bg-input);border-radius:var(--radius-sm);font-size:.75rem;color:var(--text-muted);line-height:1.5">
+            &bull; Densit&eacute; = densit&eacute; <strong>brute apparente</strong> en bigbag/conteneur (pas la densit&eacute; mat&eacute;riau)<br>
+            &bull; Pour les liquides : Brix &agrave; +0,4&nbsp;%/Brix au-dessus de l'eau (eau&nbsp;=&nbsp;1000 kg/m&sup3;)<br>
+            &bull; Huiles v&eacute;g&eacute;tales : 905-925 kg/m&sup3; / Huiles essentielles : 830-900<br>
+            &bull; Pour mettre &agrave; jour ces valeurs : &eacute;diter <code>curated.json</code> dans le repo
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1653,6 +1737,63 @@
     recalc();
   }
 
+  // ═══════════════════════════════════════════════
+  // VIEW SWITCHING — Estimator vs Densités reference
+  // ═══════════════════════════════════════════════
+  let _densitySort = { col: 'name', dir: 'asc' };
+
+  function switchView(name) {
+    const est = document.getElementById('estimatorView');
+    const den = document.getElementById('densitiesView');
+    const title = document.getElementById('topbarTitle');
+    if (name === 'densities') {
+      est.style.display = 'none';
+      den.style.display = 'flex';
+      title.textContent = 'Densités & Prix marché';
+      renderDensitiesTable();
+    } else {
+      est.style.display = 'flex';
+      den.style.display = 'none';
+      title.textContent = 'Deal Estimator';
+    }
+  }
+
+  function sortDensities(col) {
+    if (_densitySort.col === col) _densitySort.dir = _densitySort.dir === 'asc' ? 'desc' : 'asc';
+    else { _densitySort.col = col; _densitySort.dir = 'asc'; }
+    renderDensitiesTable();
+  }
+
+  function renderDensitiesTable() {
+    const tbody = document.querySelector('#densitiesTable tbody');
+    if (!tbody) return;
+    const search = (document.getElementById('densitySearch').value || '').toLowerCase().trim();
+    const stateFilter = document.getElementById('densityStateFilter').value;
+
+    let rows = Object.entries(PRODUCTS).map(([name, p]) => ({
+      name, density: p.density, marketPrice: p.marketPrice, state: p.state,
+    }));
+    if (search) rows = rows.filter(r => r.name.toLowerCase().includes(search));
+    if (stateFilter) rows = rows.filter(r => r.state === stateFilter);
+
+    const dir = _densitySort.dir === 'asc' ? 1 : -1;
+    rows.sort((a, b) => {
+      const av = a[_densitySort.col], bv = b[_densitySort.col];
+      if (typeof av === 'number') return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.name}</td>
+        <td><span class="density-state-pill density-state-${r.state}">${r.state}</span></td>
+        <td style="text-align:right">${r.density.toLocaleString('fr-FR')}</td>
+        <td style="text-align:right">${r.marketPrice.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+      </tr>
+    `).join('');
+    document.getElementById('densityCount').textContent = rows.length + ' produit' + (rows.length > 1 ? 's' : '');
+  }
+
   function pickAltPrice(event, price) {
     event.preventDefault();
     document.getElementById('rawPrice').value = price;
@@ -1799,7 +1940,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-24-postprocess-state';
+  const APP_VERSION = '2026-04-29-densities-tab';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts

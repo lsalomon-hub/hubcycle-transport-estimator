@@ -491,6 +491,176 @@
       "marketPrice": 2.5,
       "state": "Liquid"
     },
+    "Juice concentrate 17 Brix": {
+      "density": 1070.0,
+      "marketPrice": 0.8,
+      "state": "Liquid"
+    },
+    "Juice concentrate 40 Brix": {
+      "density": 1180.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Juice concentrate 65 Brix": {
+      "density": 1320.0,
+      "marketPrice": 2.5,
+      "state": "Liquid"
+    },
+    "Juice concentrate 72 Brix": {
+      "density": 1360.0,
+      "marketPrice": 3.5,
+      "state": "Liquid"
+    },
+    "Juice concentrate 75 Brix": {
+      "density": 1380.0,
+      "marketPrice": 4.0,
+      "state": "Liquid"
+    },
+    "Mango puree": {
+      "density": 1050.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Citrus puree": {
+      "density": 1050.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Peach puree": {
+      "density": 1050.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Strawberry puree": {
+      "density": 1050.0,
+      "marketPrice": 2.0,
+      "state": "Liquid"
+    },
+    "Raspberry puree": {
+      "density": 1050.0,
+      "marketPrice": 2.5,
+      "state": "Liquid"
+    },
+    "Pepper puree (acidified)": {
+      "density": 1080.0,
+      "marketPrice": 1.3,
+      "state": "Liquid"
+    },
+    "Tomatillo puree": {
+      "density": 1080.0,
+      "marketPrice": 1.0,
+      "state": "Liquid"
+    },
+    "Generic fruit puree": {
+      "density": 1050.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Sunflower oil": {
+      "density": 920.0,
+      "marketPrice": 1.5,
+      "state": "Liquid"
+    },
+    "Peanut oil": {
+      "density": 915.0,
+      "marketPrice": 2.5,
+      "state": "Liquid"
+    },
+    "Mustard oil": {
+      "density": 910.0,
+      "marketPrice": 3.0,
+      "state": "Liquid"
+    },
+    "Apricot kernel oil": {
+      "density": 915.0,
+      "marketPrice": 5.0,
+      "state": "Liquid"
+    },
+    "Moringa oil": {
+      "density": 905.0,
+      "marketPrice": 25.0,
+      "state": "Liquid"
+    },
+    "Seabuckthorn oil": {
+      "density": 920.0,
+      "marketPrice": 60.0,
+      "state": "Liquid"
+    },
+    "Cocoa butter": {
+      "density": 900.0,
+      "marketPrice": 7.0,
+      "state": "Paste"
+    },
+    "Lemon peel oil": {
+      "density": 850.0,
+      "marketPrice": 30.0,
+      "state": "Liquid"
+    },
+    "Orange oil": {
+      "density": 845.0,
+      "marketPrice": 12.0,
+      "state": "Liquid"
+    },
+    "Grapefruit oil": {
+      "density": 855.0,
+      "marketPrice": 25.0,
+      "state": "Liquid"
+    },
+    "Citronella oil": {
+      "density": 880.0,
+      "marketPrice": 20.0,
+      "state": "Liquid"
+    },
+    "Geranium oil": {
+      "density": 885.0,
+      "marketPrice": 90.0,
+      "state": "Liquid"
+    },
+    "Thyme oil": {
+      "density": 905.0,
+      "marketPrice": 40.0,
+      "state": "Liquid"
+    },
+    "Tonka beans oil": {
+      "density": 920.0,
+      "marketPrice": 50.0,
+      "state": "Liquid"
+    },
+    "Almond paste": {
+      "density": 1100.0,
+      "marketPrice": 5.0,
+      "state": "Paste"
+    },
+    "Defatted meal": {
+      "density": 450.0,
+      "marketPrice": 1.5,
+      "state": "Dry"
+    },
+    "Fusel oils": {
+      "density": 830.0,
+      "marketPrice": 0.5,
+      "state": "Liquid"
+    },
+    "Water phase (banana)": {
+      "density": 1010.0,
+      "marketPrice": 0.5,
+      "state": "Liquid"
+    },
+    "Floral water": {
+      "density": 1000.0,
+      "marketPrice": 1.0,
+      "state": "Liquid"
+    },
+    "Apple aroma FTNF": {
+      "density": 970.0,
+      "marketPrice": 4.0,
+      "state": "Liquid"
+    },
+    "Apple essence (high fold)": {
+      "density": 960.0,
+      "marketPrice": 1.0,
+      "state": "Liquid"
+    },
     "Almond press cakes": {
       "density": 480.0,
       "marketPrice": 2.5,
