@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="app-version" content="2026-04-29-simulator">
+  <meta name="app-version" content="2026-05-25-sku-overrides">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2440,17 +2440,41 @@
     recalc();
   }
 
+  // Apply SKU-level override on a freshly-resolved odoo product. If the
+  // override has matchedTo, we substitute density/state/matchedTo from that
+  // curated entry (used when the Odoo name is misleading, e.g. F177X labeled
+  // "Garlic powder" in Odoo but actually being garlic skin powder).
+  // Returns a (possibly new) odoo-like object \u2014 never mutates the original.
+  function applyOdooOverride(odoo) {
+    if (!odoo) return odoo;
+    const ov = CURATED_SKU_OVERRIDES[odoo.code?.toUpperCase()];
+    if (!ov) return odoo;
+    const out = { ...odoo, _overrideNote: ov.note || '' };
+    if (ov.matchedTo && PRODUCTS[ov.matchedTo]) {
+      const ref = PRODUCTS[ov.matchedTo];
+      out.matchedTo = ov.matchedTo;
+      out.density = ref.density;
+      out.state = ref.state;
+    }
+    if (ov.density != null) out.density = ov.density;
+    if (ov.state) out.state = ov.state;
+    return out;
+  }
+
   // Shared market-price resolution used by both input + output product handlers.
-  // Resolution order: SKU override -> curated match (by matchedTo) -> name lookup
-  // -> Odoo purchase price. Returns {price, source} or null.
+  // Resolution order: SKU marketPrice override -> override.matchedTo -> normal
+  // matchedTo -> name lookup -> Odoo purchase price.
   function resolveMarketPriceForOdoo(odoo) {
     if (!odoo) return null;
-    const skuOverride = CURATED_SKU_OVERRIDES[odoo.code.toUpperCase()];
-    if (skuOverride) {
+    const skuOverride = CURATED_SKU_OVERRIDES[odoo.code?.toUpperCase()];
+    if (skuOverride && skuOverride.marketPrice != null) {
       return {
         price: skuOverride.marketPrice,
         source: 'override ' + odoo.code + (skuOverride.note ? ': ' + skuOverride.note : ''),
       };
+    }
+    if (skuOverride && skuOverride.matchedTo && PRODUCTS[skuOverride.matchedTo]) {
+      return { price: PRODUCTS[skuOverride.matchedTo].marketPrice, source: 'override ' + odoo.code + ' \u2192 ' + skuOverride.matchedTo };
     }
     if (odoo.matchedTo && PRODUCTS[odoo.matchedTo]) {
       return { price: PRODUCTS[odoo.matchedTo].marketPrice, source: 'r\u00E9f\u00E9rence ' + odoo.matchedTo };
@@ -2579,7 +2603,7 @@
 
   // App version, tagged on each significant index.html update — surfaced in the
   // status banner so users can verify they have the latest HTML loaded.
-  const APP_VERSION = '2026-04-29-simulator';
+  const APP_VERSION = '2026-05-25-sku-overrides';
 
   // Fetch the curated reference (density/marketPrice/state per product family
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
@@ -2656,7 +2680,7 @@
   function onProductChange() {
     const rawValue = document.getElementById('productName').value.trim();
     const hint = document.getElementById('productHint');
-    const odoo = resolveOdooProduct(rawValue);
+    const odoo = applyOdooOverride(resolveOdooProduct(rawValue));
 
     if (odoo) {
       setSkuBadge('productSku', odoo.code);
@@ -2846,7 +2870,7 @@
   function onOutputProductChange() {
     const rawValue = document.getElementById('outputProduct').value.trim();
     const hint = document.getElementById('outputHint');
-    const odoo = resolveOdooProduct(rawValue);
+    const odoo = applyOdooOverride(resolveOdooProduct(rawValue));
 
     if (odoo) {
       setSkuBadge('outputSku', odoo.code);

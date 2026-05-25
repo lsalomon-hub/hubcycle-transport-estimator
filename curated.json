@@ -881,6 +881,10 @@
     "D397X": {
       "marketPrice": 28.0,
       "note": "Cardamom Powder premium high-VO"
+    },
+    "F177X": {
+      "matchedTo": "Garlic skin powder",
+      "note": "Odoo l'appelle 'Garlic powder' mais c'est de la skin powder"
     }
   }
 }
