@@ -113,15 +113,17 @@ def main() -> int:
             continue
         # Prices: list of supplier prices sorted most-recently-updated first
         # (per SQL ORDER BY odoo_write_date DESC). Default to prices[0].price.
-        # Fall back to standard_price if no supplier_info entry exists.
+        # NOTE: standard_price (Odoo "cost" field) is NOT a reliable source —
+        # often stale or manually mis-entered. If no supplier_info, leave 0
+        # so the user notices and enters a price manually.
         prices = p.get("prices") or []
         if prices:
             price = round(float(prices[0]["price"]), 4)
             price_source = "supplier"
             with_supplier += 1
         else:
-            price = round(float(p.get("standard_price") or 0), 4)
-            price_source = "standard"
+            price = 0.0
+            price_source = "none"
         entry = {
             "code": code,
             "name": name,
@@ -169,7 +171,7 @@ def main() -> int:
 
     print(f"Wrote {OUT_JSON.relative_to(REPO)} ({OUT_JSON.stat().st_size} bytes)")
     print(f"Matched {match_count}/{payload['total_products']} products with curated density")
-    print(f"Supplier prices: {with_supplier}/{payload['total_products']} from supplier_info (rest = standard_price)")
+    print(f"Supplier prices: {with_supplier}/{payload['total_products']} from supplier_info (rest = 0, manual entry needed)")
     return 0
 
 
