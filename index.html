@@ -9,44 +9,54 @@
   <meta name="app-version" content="2026-05-26-no-standard-price">
   <title>Hubcycle — Deal Estimator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #09090b;
-      --bg-card: #18181b;
-      --bg-card-hover: #1f1f23;
-      --bg-input: #27272a;
-      --bg-sidebar: #111113;
-      --border: #27272a;
-      --border-light: #3f3f46;
-      --text: #fafafa;
-      --text-muted: #a1a1aa;
-      --text-dim: #71717a;
-      --green-500: #22c55e;
-      --green-400: #4ade80;
-      --green-900: #14532d;
-      --green-950: #052e16;
-      --amber-400: #fbbf24;
-      --amber-500: #f59e0b;
-      --red-400: #f87171;
-      --red-500: #ef4444;
-      --blue-400: #60a5fa;
-      --blue-500: #3b82f6;
-      --purple-400: #c084fc;
-      --pink-400: #f472b6;
-      --accent: #22c55e;
-      --accent-dim: rgba(34,197,94,.12);
-      --radius: 12px;
-      --radius-sm: 8px;
+      /* Light "Hubcycle" theme — warm cream (spices portfolio) + teal ink & coral accent (catalogue) */
+      --bg: #fbf4ec;
+      --bg-card: #ffffff;
+      --bg-card-hover: #fff9f4;
+      --bg-input: #fbf6f0;
+      --bg-sidebar: #ffffff;
+      --border: #ece1d4;
+      --border-light: #ddd0c0;
+      --text: #0f2024;
+      --text-muted: #5c6b70;
+      --text-dim: #93a0a4;
+      --green-500: #16a34a;
+      --green-400: #15803d;
+      --green-900: #dcfce7;
+      --green-950: #f0fdf4;
+      --amber-400: #b45309;
+      --amber-500: #d97706;
+      --red-400: #dc2626;
+      --red-500: #b91c1c;
+      --blue-400: #2563eb;
+      --blue-500: #1d4ed8;
+      --purple-400: #7c3aed;
+      --pink-400: #db2777;
+      --accent: #ff684d;
+      --accent-dark: #e85539;
+      --accent-dim: rgba(255,104,77,.12);
+      --radius: 14px;
+      --radius-sm: 9px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+    }
+    /* Display type — Space Grotesk for headings, brand wordmark & key numbers */
+    .topbar h1, .result-header h2, .sidebar-logo span,
+    .card-header h3, .stitle, .result-big .rvalue,
+    #rCostPrice, .result-big .runit {
+      font-family: 'Space Grotesk', 'Manrope', sans-serif;
+      letter-spacing: -.01em;
     }
 
     /* ─── Sidebar ─── */
@@ -144,15 +154,26 @@
       justify-content: space-between;
       position: sticky;
       top: 0;
-      background: rgba(9,9,11,.85);
+      background: rgba(251,244,236,.82);
       backdrop-filter: blur(12px);
       z-index: 40;
     }
     .topbar h1 {
-      font-size: 1.15rem;
+      font-size: 1.3rem;
       font-weight: 700;
       letter-spacing: -.02em;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
     }
+    .topbar h1::before {
+      content: "";
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex: 0 0 auto;
+    }
+    .sidebar-logo span i { color: var(--accent); font-style: normal; }
     .topbar-actions { display: flex; gap: .5rem; }
     .btn {
       padding: .45rem .85rem;
@@ -175,9 +196,9 @@
     .btn-ghost:hover { background: var(--bg-card); color: var(--text); border-color: var(--border-light); }
     .btn-primary {
       background: var(--accent);
-      color: #000;
+      color: #fff;
     }
-    .btn-primary:hover { background: var(--green-400); }
+    .btn-primary:hover { background: var(--accent-dark); }
 
     /* Content area */
     .content {
@@ -266,7 +287,7 @@
     .form-group > input:focus, .form-group > select:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(34,197,94,.15);
+      box-shadow: 0 0 0 3px rgba(255,104,77,.18);
     }
     .form-group > select, .input-wrap select {
       appearance: none;
@@ -293,6 +314,8 @@
       font-size: .65rem;
       color: var(--text-dim);
     }
+
+    input[type="range"], input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
     /* ── FIELD TYPE COLOR CODING ── */
     /* 1. User input (to fill) — left green border */
@@ -376,10 +399,10 @@
       overflow: hidden;
     }
     .result-header {
-      background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(34,197,94,.05));
+      background: linear-gradient(135deg, rgba(255,104,77,.15), rgba(255,104,77,.05));
       padding: .85rem 1.25rem;
       text-align: center;
-      border-bottom: 1px solid rgba(34,197,94,.2);
+      border-bottom: 1px solid rgba(255,104,77,.2);
     }
     .result-header h2 {
       font-size: .95rem;
@@ -412,8 +435,8 @@
       text-align: center;
       padding: 1rem 0;
       margin: .6rem 0;
-      background: rgba(34,197,94,.08);
-      border: 1px solid rgba(34,197,94,.15);
+      background: rgba(255,104,77,.08);
+      border: 1px solid rgba(255,104,77,.15);
       border-radius: var(--radius-sm);
     }
     .result-big .rlabel {
@@ -446,9 +469,9 @@
       letter-spacing: .03em;
     }
     .verdict-go {
-      background: rgba(34,197,94,.12);
+      background: rgba(255,104,77,.12);
       color: var(--green-400);
-      border: 1px solid rgba(34,197,94,.3);
+      border: 1px solid rgba(255,104,77,.3);
     }
     .verdict-review {
       background: rgba(251,191,36,.1);
@@ -538,8 +561,8 @@
     }
     .section-costs .stitle { color: var(--purple-400); }
     .section-total {
-      background: rgba(34,197,94,.08);
-      border: 1px solid rgba(34,197,94,.25);
+      background: rgba(255,104,77,.08);
+      border: 1px solid rgba(255,104,77,.25);
     }
     .section-total .stitle { color: var(--green-400); }
     .section-sell {
@@ -600,8 +623,8 @@
     }
     .sell-20 .sell-price, .sell-20 .sell-tag { color: var(--amber-400); }
     .sell-30 {
-      background: rgba(34,197,94,.1);
-      border: 1px solid rgba(34,197,94,.25);
+      background: rgba(255,104,77,.1);
+      border: 1px solid rgba(255,104,77,.25);
     }
     .sell-30 .sell-price, .sell-30 .sell-tag { color: var(--green-400); }
 
@@ -627,9 +650,9 @@
       letter-spacing: .05em;
       padding: .1rem .4rem;
       border-radius: 4px;
-      background: rgba(34,197,94,.12);
+      background: rgba(255,104,77,.12);
       color: var(--green-400);
-      border: 1px solid rgba(34,197,94,.2);
+      border: 1px solid rgba(255,104,77,.2);
       margin-left: .4rem;
       vertical-align: middle;
     }
@@ -664,9 +687,9 @@
       font-family: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
     }
     .odoo-status.ok {
-      background: rgba(34,197,94,.08);
+      background: rgba(255,104,77,.08);
       color: var(--green-400);
-      border-color: rgba(34,197,94,.25);
+      border-color: rgba(255,104,77,.25);
     }
     .odoo-status.err {
       background: rgba(239,68,68,.1);
@@ -731,11 +754,11 @@
       font-size: .68rem;
       font-weight: 600;
     }
-    .density-state-Dry    { background: rgba(148,163,184,.12); color: #cbd5e1; }
-    .density-state-Liquid { background: rgba(59,130,246,.15); color: #93c5fd; }
-    .density-state-Frozen { background: rgba(96,165,250,.15); color: #bfdbfe; }
-    .density-state-Fresh  { background: rgba(34,197,94,.12); color: #86efac; }
-    .density-state-Paste  { background: rgba(249,115,22,.12); color: #fdba74; }
+    .density-state-Dry    { background: rgba(100,116,139,.14); color: #475569; }
+    .density-state-Liquid { background: rgba(37,99,235,.12);  color: #1d4ed8; }
+    .density-state-Frozen { background: rgba(2,132,199,.14);  color: #0369a1; }
+    .density-state-Fresh  { background: rgba(22,163,74,.14);  color: #15803d; }
+    .density-state-Paste  { background: rgba(234,88,12,.14);  color: #c2410c; }
     /* Collapsible transport card */
     details.card { padding: 0; }
     details.card > summary {
@@ -841,8 +864,8 @@
       white-space: nowrap;
     }
     .scenario-tab.active {
-      background: rgba(34,197,94,.12);
-      border-color: rgba(34,197,94,.4);
+      background: rgba(255,104,77,.12);
+      border-color: rgba(255,104,77,.4);
       color: var(--green-400);
       font-weight: 600;
     }
@@ -908,7 +931,7 @@
       position: sticky;
       top: 0;
     }
-    .compare-table tr.row-highlight td { background: rgba(34,197,94,.06); font-weight: 700; }
+    .compare-table tr.row-highlight td { background: rgba(255,104,77,.06); font-weight: 700; }
 
     /* Colors for values */
     .c-green { color: var(--green-400) !important; }
@@ -937,9 +960,9 @@
     <div class="sidebar-header">
       <div class="sidebar-logo">
         <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/><circle cx="12" cy="12" r="4"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3"/><circle cx="12" cy="12" r="4"/></svg>
         </div>
-        <span>Hubcycle</span>
+        <span>Hub<i>cycle</i></span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -996,6 +1019,12 @@
         <div class="odoo-status" id="odooStatus">
           <span class="odoo-status-text" id="odooStatusText">Chargement des produits Odoo&hellip;</span>
           <button class="odoo-refresh-btn" id="odooRefreshBtn" onclick="manualRefresh()" title="Recharger products.json depuis le serveur">&#x21bb; Rafra&icirc;chir</button>
+        </div>
+
+        <!-- FREIGHT FLUCTUATION BANNER — rempli par updateFreightBanner() depuis freight.json -->
+        <div id="freightFlux" style="display:flex;align-items:center;gap:.55rem;padding:.5rem .8rem;border-radius:var(--radius-sm);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--amber-400);font-size:.78rem;line-height:1.35;margin-top:.5rem">
+          <span style="flex:0 0 auto;font-size:.95rem">&#9888;&#65039;</span>
+          <span id="freightFluxText">Chargement des tarifs de fret&hellip;</span>
         </div>
 
         <!-- SCENARIO TABS -->
@@ -1227,7 +1256,7 @@
                 <label>Produit de sortie (apr&egrave;s process)</label>
                 <input type="text" id="outputProduct" list="productList" placeholder="ex. Black pepper powder" oninput="onOutputProductChange()">
                 <span class="sku-badge" id="outputSku"></span>
-                <span class="hint" id="outputHint">Le prix march&eacute; sera compar&eacute; &agrave; ce produit</span>
+                <span class="hint" id="outputHint">Produit de sortie &mdash; densit&eacute; apr&egrave;s process (optionnel)</span>
               </div>
               <div class="form-group">
                 <label>Densit&eacute; apr&egrave;s process</label>
@@ -1455,13 +1484,6 @@
                   <span class="unit-label">%</span>
                 </div>
               </div>
-              <div class="form-group">
-                <label>Prix march&eacute;</label>
-                <div class="input-wrap">
-                  <input type="number" id="marketPrice" value="0.55" min="0" step="0.01" oninput="recalc()">
-                  <span class="unit-label">&euro;/kg</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1536,48 +1558,19 @@
               </div>
             </div>
 
-            <!-- ── PRIX MARCHE DE REFERENCE ── -->
-            <div class="section-box" style="background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);text-align:center;padding:.75rem">
-              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-400);margin-bottom:.15rem">Prix march&eacute; standard</div>
-              <div style="font-size:1.4rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums"><span id="rMarketPriceDisplay">&mdash;</span> &euro;/kg</div>
-              <div style="font-size:.68rem;color:var(--text-dim);margin-top:.1rem" id="rMarketPriceProduct">(produit de sortie)</div>
-            </div>
-
-            <!-- ── PRIX DE VENTE PROPOSES ── -->
+            <!-- ── PRIX DE VENTE (SIMULATEUR) ── -->
             <div class="section-box section-sell">
-              <div class="stitle">Prix de vente propos&eacute;s vs march&eacute; (<span id="rMarketPriceInline">&mdash;</span> &euro;/kg)</div>
-
-              <div class="sell-card sell-20">
-                <div class="sell-header">
-                  <span class="sell-tag">-20% march&eacute;</span>
-                  <span class="sell-price" id="rTarget20">&mdash;</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <span class="sell-margin" style="color:var(--text-muted)">Marge</span>
-                  <span class="sell-margin" id="rMargin20">&mdash;</span>
-                </div>
-              </div>
-
-              <div class="sell-card sell-30">
-                <div class="sell-header">
-                  <span class="sell-tag">-30% march&eacute;</span>
-                  <span class="sell-price" id="rTarget30">&mdash;</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <span class="sell-margin" style="color:var(--text-muted)">Marge</span>
-                  <span class="sell-margin" id="rMargin30">&mdash;</span>
-                </div>
-              </div>
+              <div class="stitle">Prix de vente</div>
 
               <!-- ── SIMULATEUR PRIX VENTE LIVE ── -->
-              <div style="margin-top:.75rem;padding:.75rem;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:var(--radius-sm)">
+              <div style="margin-top:.75rem;padding:.75rem;background:rgba(255,104,77,.06);border:1px solid rgba(255,104,77,.25);border-radius:var(--radius-sm)">
                 <div style="font-size:.72rem;font-weight:700;color:var(--green-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Simulateur prix de vente</div>
                 <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
                   <input type="number" id="simSellPrice" step="0.10" min="0" value="0" oninput="recalcSimulator()" onchange="recalcSimulator()" style="flex:0 0 100px;padding:.4rem .5rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.95rem;font-weight:700">
                   <span style="color:var(--text-muted);font-size:.8rem">&euro;/kg</span>
                   <input type="range" id="simSellSlider" min="0" max="50" step="0.05" value="0" oninput="onSimSliderChange(this.value)" style="flex:1">
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;font-size:.78rem">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.78rem">
                   <div style="text-align:center;padding:.4rem;background:var(--bg-input);border-radius:4px">
                     <div style="color:var(--text-dim);font-size:.65rem;text-transform:uppercase">Marge brute</div>
                     <div id="simMarginAbs" style="font-weight:800;font-size:1.05rem;color:var(--text)">&mdash;</div>
@@ -1586,21 +1579,10 @@
                     <div style="color:var(--text-dim);font-size:.65rem;text-transform:uppercase">Marge %</div>
                     <div id="simMarginPct" style="font-weight:800;font-size:1.05rem">&mdash;</div>
                   </div>
-                  <div style="text-align:center;padding:.4rem;background:var(--bg-input);border-radius:4px">
-                    <div style="color:var(--text-dim);font-size:.65rem;text-transform:uppercase">vs march&eacute;</div>
-                    <div id="simVsMarket" style="font-weight:800;font-size:1.05rem">&mdash;</div>
-                  </div>
                 </div>
                 <div style="margin-top:.4rem;font-size:.68rem;color:var(--text-dim);text-align:center" id="simHint">Bouge le slider pour ajuster, le coût de revient reste fixe</div>
               </div>
             </div>
-
-            <!-- ── VERDICT ── -->
-            <div class="result-row">
-              <span class="rlabel">Co&ucirc;t vs march&eacute;</span>
-              <span class="rvalue" id="rCostVsMarket">&mdash;</span>
-            </div>
-            <div class="verdict-box" id="verdictBox">&mdash;</div>
 
           </div>
         </div>
@@ -1651,6 +1633,7 @@
               &bull; Charge max : 26 000 kg<br>
               &bull; Poids = min(26 &times; densit&eacute;, 26T)<br>
               &bull; Co&ucirc;t : cotations r&eacute;elles Hubcycle (FATTON, EXPEDITORS)<br>
+              &bull; &times; coefficient de march&eacute; (fret volatil &mdash; <code>freight.json</code>)<br>
               &bull; Si route inconnue : estimation 0.38 &euro;/km maritime<br>
               &bull; Transit : donn&eacute;es r&eacute;elles ou ~distance/600 km/j + escales
             </div>
@@ -1689,7 +1672,7 @@
       <div class="card">
         <div class="card-header">
           <div class="dot" style="background:var(--green-500)"></div>
-          <h3>R&eacute;f&eacute;rentiel densit&eacute;s &amp; prix march&eacute;</h3>
+          <h3>R&eacute;f&eacute;rentiel densit&eacute;s</h3>
         </div>
         <div class="card-body">
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
@@ -1711,7 +1694,6 @@
                   <th onclick="sortDensities('name')" style="cursor:pointer">Produit (r&eacute;f&eacute;rence) &uarr;&darr;</th>
                   <th onclick="sortDensities('state')" style="cursor:pointer">&Eacute;tat</th>
                   <th onclick="sortDensities('density')" style="cursor:pointer;text-align:right">Densit&eacute; (kg/m&sup3;)</th>
-                  <th onclick="sortDensities('marketPrice')" style="cursor:pointer;text-align:right">Prix march&eacute; (&euro;/kg)</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -1731,6 +1713,8 @@
 
 <input type="hidden" id="processYield" value="100">
 <input type="hidden" id="manufacturing" value="0">
+<!-- marketPrice retiré de l'UI (non représentatif). Champ caché à 0 pour ne rien casser. -->
+<input type="hidden" id="marketPrice" value="0">
 <datalist id="countryList"></datalist>
 
 <script>
@@ -1783,7 +1767,9 @@
   // SEA FREIGHT RATES — from Sea Rates sheet (xlsx)
   // { cost: EUR, weight: kg, transit: days, container }
   // ═══════════════════════════════════════════════
-  const SEA_RATES = {
+  // NOTE: declared with `let` (not const) so loadFreight() can override these
+  // tables at runtime from freight.json — edit that file, no code change needed.
+  let SEA_RATES = {
     "Brazil|France|20":     { cost: 3400, weight: 10000, transit: 28 },
     "Guatemala|France|20":  { cost: 4600, weight: 6000,  transit: 38 },
     "Guatemala|France|40":  { cost: 3140, weight: 25000, transit: 35 },
@@ -1803,7 +1789,7 @@
   // AIR FREIGHT RATES — from Air Rates sheet (xlsx)
   // { eurPerKg, transit }
   // ═══════════════════════════════════════════════
-  const AIR_RATES = {
+  let AIR_RATES = {
     "USA|France":       { eurPerKg: 2.10, transit: 5 },
     "United States|France": { eurPerKg: 2.10, transit: 5 },
     "France|USA":       { eurPerKg: 2.05, transit: 5 },
@@ -1819,7 +1805,7 @@
   // ROAD EUR/km RATES — from Road Distances sheet (xlsx)
   // Based on 112 historical Hubcycle quotations
   // ═══════════════════════════════════════════════
-  const ROAD_EUR_PER_KM = [
+  let ROAD_EUR_PER_KM = [
     { maxKm: 500,  rate: 1.80 },  // Short distance
     { maxKm: 1200, rate: 1.55 },  // Medium distance
     { maxKm: 99999, rate: 1.35 }, // Long distance
@@ -1828,7 +1814,7 @@
   // ═══════════════════════════════════════════════
   // ROAD BENCHMARKS — avg cost by weight range (xlsx)
   // ═══════════════════════════════════════════════
-  const ROAD_BENCHMARKS = [
+  let ROAD_BENCHMARKS = [
     { minKg: 0,     maxKg: 500,   eurPerKg: 7.06, avgCost: 534 },
     { minKg: 500,   maxKg: 2000,  eurPerKg: 0.56, avgCost: 401 },
     { minKg: 2000,  maxKg: 7000,  eurPerKg: 0.20, avgCost: 844 },
@@ -1922,6 +1908,15 @@
   let CURATED_SKU_OVERRIDES = {};
 
   // ═══════════════════════════════════════════════
+  // MARKET FREIGHT COEFFICIENT — loaded from freight.json
+  // Multiplies Sea & Air freight to track market swings (Red Sea crisis,
+  // Suez reroutes, peak season…). 1.0 = rates exactly as quoted.
+  // Bump freight.json > market_index.coefficient to follow the Drewry index.
+  // ═══════════════════════════════════════════════
+  let MARKET_COEF = 1.0;
+  let FREIGHT_META = null;
+
+  // ═══════════════════════════════════════════════
   // STATE-DEPENDENT FREIGHT MULTIPLIER
   // Reefer / cold-chain transport costs significantly more than dry.
   // Applied on top of base freight rate (sea/road/air) for the input
@@ -1958,17 +1953,17 @@
       const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
                 || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
       if (rate) {
-        cost = Math.round(rate.cost * mult);
+        cost = Math.round(rate.cost * mult * MARKET_COEF);
         transit = rate.transit;
       } else if (dist > 0) {
-        cost = Math.round(dist * 0.38 * mult);
+        cost = Math.round(dist * 0.38 * mult * MARKET_COEF);
         transit = Math.round(dist / 600) + 5;
       }
     } else if (mode === 'Air') {
       const rate = AIR_RATES[norm(origin)+'|'+norm(dest)] || AIR_RATES[origin+'|'+dest];
       const eurPerKg = rate ? rate.eurPerKg : 2.50;
       const w = parseFloat(weight) || 1000;
-      cost = Math.round(eurPerKg * w * mult);
+      cost = Math.round(eurPerKg * w * mult * MARKET_COEF);
       transit = rate ? rate.transit : Math.max(2, Math.round(dist / 3000));
     }
     return { distance: dist, cost, transit };
@@ -2204,7 +2199,6 @@
     const rows = [
       ['Produit', m => m.product],
       ['Prix achat (RM €/kg)', m => m.rawPrice],
-      ['Prix marché (€/kg)', m => m.marketPrice],
       ['T1 (€/kg)', m => m.t1],
       ['T2 (€/kg)', m => m.t2],
       ['T3 (€/kg)', m => m.t3],
@@ -2215,11 +2209,6 @@
       ['Stockage', m => m.storage],
       ['Taxes + Assurance', m => m.taxIns],
       ['Prix de revient', m => m.costPrice, true],
-      ['Sell target 20%', m => m.target20],
-      ['Sell target 30%', m => m.target30],
-      ['Marge à 20%', m => m.margin20],
-      ['Marge à 30%', m => m.margin30],
-      ['Coût vs marché', m => m.costVsMarket],
     ];
     const headerHtml = '<th>Métrique</th>' + metrics.map(s => '<th>' + s.name.replace(/</g, '&lt;') + '</th>').join('');
     const bodyHtml = rows.map(([label, fn, hi]) => {
@@ -2343,7 +2332,7 @@
             <label>Transit (j)</label>
             <input type="number" step="1" min="0" value="${leg.transit}" oninput="updateExtraLeg('${prefix}', '${leg.id}', 'transit', this.value)">
           </div>
-          <button onclick="autoCalcLeg('${prefix}', '${leg.id}')" title="Recalculer auto depuis origine/destination" style="padding:.3rem .6rem;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:4px;color:#86efac;cursor:pointer;font-size:.7rem;font-weight:600;align-self:end;white-space:nowrap">↻ Auto</button>
+          <button onclick="autoCalcLeg('${prefix}', '${leg.id}')" title="Recalculer auto depuis origine/destination" style="padding:.3rem .6rem;background:rgba(255,104,77,.1);border:1px solid rgba(255,104,77,.3);border-radius:4px;color:#86efac;cursor:pointer;font-size:.7rem;font-weight:600;align-self:end;white-space:nowrap">↻ Auto</button>
         </div>
         <div style="margin-top:.3rem;font-size:.68rem;color:var(--text-dim)">${distTxt} · ${leg.origin || '?'} → ${leg.dest || '?'} (${leg.mode})${leg.manualCost ? ' · <span style="color:#fcd34d">coût modifié manuellement</span>' : ''}</div>
       </div>
@@ -2388,7 +2377,7 @@
     if (name === 'densities') {
       est.style.display = 'none';
       den.style.display = 'flex';
-      title.textContent = 'Densités & Prix marché';
+      title.textContent = 'Densités';
       renderDensitiesTable();
     } else {
       est.style.display = 'flex';
@@ -2410,7 +2399,7 @@
     const stateFilter = document.getElementById('densityStateFilter').value;
 
     let rows = Object.entries(PRODUCTS).map(([name, p]) => ({
-      name, density: p.density, marketPrice: p.marketPrice, state: p.state,
+      name, density: p.density, state: p.state,
     }));
     if (search) rows = rows.filter(r => r.name.toLowerCase().includes(search));
     if (stateFilter) rows = rows.filter(r => r.state === stateFilter);
@@ -2427,7 +2416,6 @@
         <td>${r.name}</td>
         <td><span class="density-state-pill density-state-${r.state}">${r.state}</span></td>
         <td style="text-align:right">${r.density.toLocaleString('fr-FR')}</td>
-        <td style="text-align:right">${r.marketPrice.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
       </tr>
     `).join('');
     document.getElementById('densityCount').textContent = rows.length + ' produit' + (rows.length > 1 ? 's' : '');
@@ -2609,6 +2597,46 @@
   // + SKU-specific overrides) from curated.json. Runs alongside loadOdooProducts
   // so that updates to marketPrice reference values propagate via the Refresh button
   // without needing a hard-reload of the HTML.
+  // Fetch freight rate tables + market coefficient from freight.json.
+  // Overrides the embedded SEA_RATES/AIR_RATES/ROAD_* defaults so freight
+  // can be updated by editing one file (no code change), and refreshes the
+  // "le marché fluctue" banner with the last-updated date.
+  async function loadFreight() {
+    try {
+      const res = await fetch('freight.json?v=' + Date.now(), {cache: 'no-store'});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const f = await res.json();
+      if (f.sea_rates)       SEA_RATES = f.sea_rates;
+      if (f.air_rates)       AIR_RATES = f.air_rates;
+      if (f.road_eur_per_km) ROAD_EUR_PER_KM = f.road_eur_per_km;
+      if (f.road_benchmarks) ROAD_BENCHMARKS = f.road_benchmarks;
+      if (f.market_index && typeof f.market_index.coefficient === 'number') {
+        MARKET_COEF = f.market_index.coefficient;
+      }
+      FREIGHT_META = f;
+      updateFreightBanner(f);
+      if (typeof recalc === 'function') recalc();
+      return true;
+    } catch (e) {
+      console.error('Failed to load freight.json', e);
+      return false;
+    }
+  }
+
+  function updateFreightBanner(f) {
+    const el = document.getElementById('freightFluxText');
+    if (!el) return;
+    if (!f) { el.textContent = '⚠️ Tarifs de fret indicatifs — le marché fluctue fortement.'; return; }
+    const idx = f.market_index || {};
+    const note = f.fluctuation_note || 'Tarifs de fret indicatifs — le marché fluctue fortement.';
+    const ref = idx.current_value
+      ? ' (réf. Drewry ' + idx.current_value.toLocaleString('fr-FR') + ' $/40′, ' + (idx.current_date || '') + ')'
+      : '';
+    const coef = (typeof idx.coefficient === 'number' && idx.coefficient !== 1)
+      ? ' · coef marché ×' + idx.coefficient : '';
+    el.innerHTML = note + ' &nbsp;·&nbsp; <strong>Mis à jour : ' + (f.last_updated || '?') + '</strong>' + ref + coef;
+  }
+
   async function loadCurated() {
     try {
       const url = 'curated.json?v=' + Date.now();
@@ -2660,15 +2688,18 @@
     if (btn) btn.disabled = true;
     if (textEl) textEl.innerHTML = '\u21bb Rafra\u00EEchissement\u2026';
     try {
+      await loadFreight();
       await loadCurated();
       await loadOdooProducts();
     } finally { if (btn) btn.disabled = false; }
   }
 
   async function startOdooRefreshLoop() {
+    await loadFreight();
     await loadCurated();
     await loadOdooProducts();
     setInterval(async () => {
+      await loadFreight();
       await loadCurated();
       await loadOdooProducts();
     }, ODOO_REFRESH_MS);
@@ -2695,14 +2726,6 @@
           t1OriginEl.value = odoo.originCountry;
           if (typeof onRouteChange === 'function') onRouteChange('t1');
         }
-      }
-      // Market price: mirror from input product when no output product is set.
-      // If user has specified a distinct output product, onOutputProductChange
-      // owns marketPrice (product transforms to a different market reference).
-      const outVal = (document.getElementById('outputProduct').value || '').trim();
-      if (!outVal) {
-        const mp = resolveMarketPriceForOdoo(odoo);
-        if (mp) document.getElementById('marketPrice').value = mp.price;
       }
       // Density/state from curated match (either explicit via matchedTo, or try on-the-fly)
       const curated = odoo.density != null
@@ -2750,13 +2773,8 @@
         // Mirror to processedState unless user has manually picked one
         const psEl = document.getElementById('processedState');
         if (psEl && !psEl.dataset.userTouched) psEl.value = curated.state;
-        const outVal = (document.getElementById('outputProduct').value || '').trim();
-        if (!outVal && curated.marketPrice != null) {
-          document.getElementById('marketPrice').value = curated.marketPrice;
-        }
         const matchedName = Object.keys(PRODUCTS).find(k => PRODUCTS[k] === curated);
-        const priceTxt = curated.marketPrice != null ? ' \u2022 Prix march\u00E9 ' + curated.marketPrice.toFixed(2) + ' \u20AC/kg' : '';
-        hint.innerHTML = '\u2139 R\u00E9f. ' + (matchedName || '?') + ' \u2022 Densit\u00E9 ' + curated.density + ' kg/m\u00B3' + priceTxt + ' <span class="auto-tag">auto</span>';
+        hint.innerHTML = '\u2139 R\u00E9f. ' + (matchedName || '?') + ' \u2022 Densit\u00E9 ' + curated.density + ' kg/m\u00B3 <span class="auto-tag">auto</span>';
         onDensityChange();
       } else {
         hint.textContent = rawValue.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle' : '';
@@ -2881,25 +2899,16 @@
       if (densityRef && densityRef.density) {
         document.getElementById('processedDensity').value = densityRef.density;
       }
-      const mp = resolveMarketPriceForOdoo(odoo);
-      let marketPrice = null, marketSource = '';
-      if (mp) {
-        marketPrice = mp.price;
-        marketSource = ' (' + mp.source + ')';
-        document.getElementById('marketPrice').value = marketPrice;
-      }
-      const densityTxt = densityRef && densityRef.density ? ' \u2022 Densit\u00E9 ' + densityRef.density + ' kg/m\u00B3' : '';
-      const priceTxt = marketPrice != null ? 'Prix march\u00E9 ' + marketPrice.toFixed(2) + ' \u20AC/kg' + marketSource : 'Pas de prix r\u00E9f\u00E9rence';
-      hint.innerHTML = '\u2705 ' + odoo.code + ' \u00B7 ' + priceTxt + densityTxt + ' <span class="auto-tag">auto</span>';
+      const densityTxt = densityRef && densityRef.density ? 'Densit\u00E9 ' + densityRef.density + ' kg/m\u00B3' : 'Densit\u00E9 non r\u00E9f\u00E9renc\u00E9e';
+      hint.innerHTML = '\u2705 ' + odoo.code + ' \u00B7 ' + densityTxt + ' <span class="auto-tag">auto</span>';
     } else {
       setSkuBadge('outputSku', null);
       const curated = lookupCuratedDensity(rawValue);
       if (curated) {
-        document.getElementById('marketPrice').value = curated.marketPrice;
         document.getElementById('processedDensity').value = curated.density;
-        hint.innerHTML = '\u2139 Prix march\u00E9 ' + curated.marketPrice.toFixed(2) + ' \u20AC/kg \u2022 Densit\u00E9 ' + curated.density + ' kg/m\u00B3 (r\u00E9f\u00E9rence) <span class="auto-tag">auto</span>';
+        hint.innerHTML = '\u2139 Densit\u00E9 ' + curated.density + ' kg/m\u00B3 (r\u00E9f\u00E9rence) <span class="auto-tag">auto</span>';
       } else {
-        hint.textContent = rawValue.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle du prix march\u00E9' : 'Le prix march\u00E9 sera compar\u00E9 \u00E0 ce produit';
+        hint.textContent = rawValue.length >= 2 ? 'Produit non reconnu \u2014 saisie manuelle' : '';
       }
     }
     recalc();
@@ -3175,13 +3184,13 @@
       const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
                 || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
       if (rate) {
-        costEl.value = Math.round(rate.cost * mult);
+        costEl.value = Math.round(rate.cost * mult * MARKET_COEF);
         transitEl.value = rate.transit;
       } else {
         // Fallback: estimate sea freight from distance (~0.38 EUR/km for container)
         const seaDist = parseFloat(distEl.value) || 0;
         if (seaDist > 0) {
-          costEl.value = Math.round(seaDist * 0.38 * mult);
+          costEl.value = Math.round(seaDist * 0.38 * mult * MARKET_COEF);
           transitEl.value = Math.round(seaDist / 600) + 5; // ~600 km/day + port time
         }
       }
@@ -3191,7 +3200,7 @@
       const eurPerKg = rate ? rate.eurPerKg : 2.50; // default 2.50 EUR/kg if unknown
       const transit = rate ? rate.transit : Math.max(2, Math.round(parseFloat(distEl.value) / 3000));
       const weight = parseFloat(weightEl.value) || 1000;
-      costEl.value = Math.round(eurPerKg * weight * mult);
+      costEl.value = Math.round(eurPerKg * weight * mult * MARKET_COEF);
       transitEl.value = transit;
     }
 
@@ -3249,11 +3258,9 @@
 
     const marginAbs = sell - cost;
     const marginPct = sell > 0 ? marginAbs / sell : 0;
-    const vsMarket = market > 0 ? (sell - market) / market : 0;
 
     document.getElementById('simMarginAbs').textContent = (marginAbs >= 0 ? '+' : '') + fmt(marginAbs, 3) + ' €';
     document.getElementById('simMarginPct').textContent = fmtPct(marginPct);
-    document.getElementById('simVsMarket').textContent = (vsMarket >= 0 ? '+' : '') + fmtPct(vsMarket);
 
     // Color
     const m = document.getElementById('simMarginPct');
@@ -3261,8 +3268,6 @@
                   : marginPct >= 0.15 ? 'var(--amber-400)'
                   : marginPct >= 0    ? '#fbbf24'
                   : 'var(--red-400)';
-    const vm = document.getElementById('simVsMarket');
-    vm.style.color = vsMarket <= 0 ? 'var(--green-400)' : '#fbbf24';
 
     // Hint
     let hint = '';
@@ -3271,7 +3276,6 @@
     else if (marginPct < 0.20) hint = 'Marge OK (10–20%)';
     else if (marginPct < 0.35) hint = 'Marge confortable (20–35%)';
     else hint = 'Marge élevée (> 35%)';
-    if (market > 0 && sell > market) hint += ' · au-dessus du marché ↑';
     document.getElementById('simHint').textContent = hint;
   }
 
@@ -3364,14 +3368,6 @@
       R = (((RM * Wimp) + analysis + t1Effective + manuf) * (1 / yieldPct) + storage + t2perkg + t3Effective) * Wexp * ins;
     }
 
-    const target20 = marketPrice * 0.80;
-    const target30 = marketPrice * 0.70;
-    const margin20 = R > 0 ? (target20 - R) / target20 : 0;
-    const margin30 = R > 0 ? (target30 - R) / target30 : 0;
-    const costVsMarket = marketPrice > 0 ? (R - marketPrice) / marketPrice : 0;
-    const minSell = targetMarginPct < 1 ? R / (1 - targetMarginPct) : 0;
-    const gapVsMarket = marketPrice > 0 ? (marketPrice - minSell) / marketPrice : 0;
-
     // Transport section — show effective (0 if excluded by Incoterm)
     const totalEffectiveTransport = t1Effective + t2perkg + t3Effective;
     document.getElementById('rT1').textContent = fmt(t1Effective) + ' \u20AC' + (t1HubPays ? '' : ' (excl.)');
@@ -3395,40 +3391,6 @@
     _lastMarket = marketPrice;
     syncSimulatorRange(R, marketPrice);
     recalcSimulator();
-
-    // Sell prices
-    document.getElementById('rMarketPriceInline').textContent = fmt(marketPrice, 2);
-    document.getElementById('rMarketPriceDisplay').textContent = fmt(marketPrice, 2);
-    const outProd = document.getElementById('outputProduct').value.trim();
-    const inProd = document.getElementById('productName').value.trim();
-    const outOdoo = resolveOdooProduct(outProd);
-    const inOdoo = resolveOdooProduct(inProd);
-    const outLabel = outOdoo ? outOdoo.name + ' [' + outOdoo.code + ']' : outProd;
-    const inLabel = inOdoo ? inOdoo.name + ' [' + inOdoo.code + ']' : inProd;
-    document.getElementById('rMarketPriceProduct').textContent = outLabel ? '(' + outLabel + ')' : (inLabel ? '(' + inLabel + ')' : '(produit)');
-    document.getElementById('rTarget20').textContent = fmt(target20, 2) + ' \u20AC/kg';
-    document.getElementById('rTarget30').textContent = fmt(target30, 2) + ' \u20AC/kg';
-    document.getElementById('rMargin20').textContent = fmtPct(margin20);
-    document.getElementById('rMargin30').textContent = fmtPct(margin30);
-    colorValue('rMargin20', margin20);
-    colorValue('rMargin30', margin30);
-
-    // Market comparison
-    document.getElementById('rCostVsMarket').textContent = fmtPct(costVsMarket);
-    colorValue('rCostVsMarket', -costVsMarket);
-
-    const vbox = document.getElementById('verdictBox');
-    const maxCostForGo = marketPrice > 0 ? marketPrice * (1 - targetMarginPct) : 0;
-    if (R > 0 && R <= maxCostForGo) {
-      vbox.textContent = 'GO';
-      vbox.className = 'verdict-box verdict-go';
-    } else if (R > 0 && marketPrice > 0 && R > marketPrice * 5) {
-      vbox.textContent = 'NO GO';
-      vbox.className = 'verdict-box verdict-nogo';
-    } else {
-      vbox.textContent = 'REVIEW';
-      vbox.className = 'verdict-box verdict-review';
-    }
 
     document.getElementById('qT1').textContent = fmt(t1perkg) + ' \u20AC';
     document.getElementById('qT2').textContent = fmt(t2perkg) + ' \u20AC';

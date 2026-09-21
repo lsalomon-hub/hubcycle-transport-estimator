@@ -1,0 +1,58 @@
+{
+  "description": "Tarifs de fret indicatifs charges au runtime par index.html (comme curated.json). Base = cotations reelles Hubcycle (FATTON, EXPEDITORS). Le coefficient de marche fait fluctuer le maritime/aerien dans le temps. EDITER ce fichier puis commit & push -> Render redeploie en ~1 min.",
+  "last_updated": "2026-06-19",
+  "fluctuation_note": "Tarifs de fret indicatifs. Le marche fluctue fortement (crise mer Rouge / Suez, prix du gazole, saisonnalite). Verifier une cotation reelle avant engagement.",
+
+  "market_index": {
+    "comment": "coefficient multiplie les tarifs maritimes ET aeriens. 1.0 = tarifs tels que cotes par les transitaires. Pour suivre la hausse du marche, monter ce nombre (ex: current_value / baseline_value = 3969/3433 = 1.16). Source publique gratuite, publiee chaque semaine.",
+    "source": "Drewry World Container Index (composite, USD/40ft)",
+    "baseline_value": 3433,
+    "baseline_date": "2026-04",
+    "current_value": 3969,
+    "current_date": "2026-06-18",
+    "coefficient": 1.0,
+    "applies_to": ["Sea", "Air"]
+  },
+
+  "sea_rates": {
+    "Brazil|France|20":        { "cost": 3400, "weight": 10000, "transit": 28 },
+    "Guatemala|France|20":     { "cost": 4600, "weight": 6000,  "transit": 38 },
+    "Guatemala|France|40":     { "cost": 3140, "weight": 25000, "transit": 35 },
+    "India|France|40":         { "cost": 2150, "weight": 20000, "transit": 38 },
+    "India|Germany|40":        { "cost": 2150, "weight": 20000, "transit": 38 },
+    "India|Indonesia|40":      { "cost": 1250, "weight": 20000, "transit": 21 },
+    "Mexico|France|40":        { "cost": 6018, "weight": 20000, "transit": 35 },
+    "Peru|France|20":          { "cost": 2637, "weight": 5000,  "transit": 46 },
+    "Peru|France|40":          { "cost": 2858, "weight": 10000, "transit": 46 },
+    "USA|France|40":           { "cost": 3530, "weight": 4522,  "transit": 46 },
+    "United States|France|40": { "cost": 3530, "weight": 4522,  "transit": 46 },
+    "Vietnam|France|40":       { "cost": 5135, "weight": 25000, "transit": 33 },
+    "Intra-Europe||Truck":     { "cost": 800,  "weight": 10000, "transit": 5 }
+  },
+
+  "air_rates": {
+    "USA|France":           { "eurPerKg": 2.10, "transit": 5 },
+    "United States|France": { "eurPerKg": 2.10, "transit": 5 },
+    "France|USA":           { "eurPerKg": 2.05, "transit": 5 },
+    "India|France":         { "eurPerKg": 2.50, "transit": 3 },
+    "Vietnam|France":       { "eurPerKg": 3.00, "transit": 4 },
+    "Brazil|France":        { "eurPerKg": 3.50, "transit": 4 },
+    "Guatemala|France":     { "eurPerKg": 3.50, "transit": 4 },
+    "Mexico|France":        { "eurPerKg": 3.00, "transit": 4 },
+    "Intra-Europe":         { "eurPerKg": 1.50, "transit": 1 }
+  },
+
+  "road_eur_per_km": [
+    { "maxKm": 500,   "rate": 1.80 },
+    { "maxKm": 1200,  "rate": 1.55 },
+    { "maxKm": 99999, "rate": 1.35 }
+  ],
+
+  "road_benchmarks": [
+    { "minKg": 0,     "maxKg": 500,   "eurPerKg": 7.06, "avgCost": 534 },
+    { "minKg": 500,   "maxKg": 2000,  "eurPerKg": 0.56, "avgCost": 401 },
+    { "minKg": 2000,  "maxKg": 7000,  "eurPerKg": 0.20, "avgCost": 844 },
+    { "minKg": 7000,  "maxKg": 15000, "eurPerKg": 0.16, "avgCost": 1755 },
+    { "minKg": 15000, "maxKg": 50000, "eurPerKg": 0.12, "avgCost": 2839 }
+  ]
+}
