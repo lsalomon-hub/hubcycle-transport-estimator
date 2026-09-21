@@ -317,6 +317,60 @@
 
     input[type="range"], input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
+    /* ── GUIDED STEPPER ── */
+    .stepper { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+    .step-chip {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .45rem .8rem; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-muted); font-family: inherit; font-size: .8rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .step-chip:hover { border-color: var(--accent); color: var(--text); }
+    .step-chip .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--bg-input); color: var(--text-dim); font-size: .72rem; font-weight: 700;
+    }
+    .step-chip.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step-chip.current .step-num { background: rgba(255,255,255,.25); color: #fff; }
+    .step-chip.done { border-color: var(--accent); color: var(--accent); }
+    .step-chip.done .step-num { background: var(--accent-dim); color: var(--accent); }
+    .step { display: none; }
+    .step.step-active { display: block; animation: stepIn .25s ease; }
+    @keyframes stepIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .step-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .25rem; }
+    .step-nav .step-dots { font-size: .78rem; color: var(--text-dim); font-weight: 600; }
+    .step-intro {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 3px solid var(--accent); border-radius: var(--radius-sm);
+      padding: .7rem .9rem; margin-bottom: 1rem; font-size: .85rem; color: var(--text-muted);
+    }
+    .step-intro b { color: var(--text); font-weight: 700; }
+
+    /* ── HELP TOOLTIPS ── */
+    .hlp {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 15px; height: 15px; border-radius: 50%;
+      background: var(--bg-input); color: var(--text-dim);
+      font-size: .66rem; font-weight: 700; font-style: normal;
+      cursor: help; margin-left: .3rem; border: 1px solid var(--border);
+      position: relative; vertical-align: middle;
+    }
+    .hlp:hover, .hlp:focus { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); outline: none; }
+    .hlp::after {
+      content: attr(data-tip);
+      position: absolute; bottom: 145%; left: 50%; transform: translateX(-50%);
+      width: 220px; max-width: 60vw;
+      background: var(--text); color: #fff; padding: .55rem .7rem; border-radius: 8px;
+      font-family: 'Inter', 'Manrope', sans-serif;
+      font-size: .72rem; font-weight: 500; line-height: 1.4; text-align: left;
+      text-transform: none; letter-spacing: normal;
+      opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 60;
+      box-shadow: 0 8px 24px rgba(15,32,36,.25);
+    }
+    .hlp:hover::after, .hlp:focus::after { opacity: 1; }
+
     /* ── FIELD TYPE COLOR CODING ── */
     /* 1. User input (to fill) — left green border */
     .field-user input, .field-user select {
@@ -1047,6 +1101,19 @@
           </div>
         </div>
 
+        <!-- GUIDED STEPPER -->
+        <div class="stepper" id="stepper">
+          <button class="step-chip" data-step="1" onclick="stepGo(1)"><span class="step-num">1</span> Produit</button>
+          <button class="step-chip" data-step="2" onclick="stepGo(2)"><span class="step-num">2</span> Transport amont</button>
+          <button class="step-chip" data-step="3" onclick="stepGo(3)"><span class="step-num">3</span> Transformation</button>
+          <button class="step-chip" data-step="4" onclick="stepGo(4)"><span class="step-num">4</span> Transport aval</button>
+          <button class="step-chip" data-step="5" onclick="stepGo(5)"><span class="step-num">5</span> Co&ucirc;ts &amp; marge</button>
+        </div>
+
+        <!-- ═══ STEP 1 : PRODUIT ═══ -->
+        <div class="step step-active" id="step-1">
+        <div class="step-intro">&#128075; <b>Commencez par choisir votre produit.</b> Tapez son nom ou son code&nbsp;: le prix d'achat, la densit&eacute; et le pays d'origine se remplissent tout seuls depuis Odoo.</div>
+
         <!-- PRODUCT -->
         <div class="card">
           <div class="card-header">
@@ -1073,7 +1140,7 @@
                 </select>
               </div>
               <div class="form-group field-auto-edit">
-                <label>Densit&eacute; brute (mati&egrave;re premi&egrave;re)</label>
+                <label>Densit&eacute; brute (mati&egrave;re premi&egrave;re)<span class="hlp" tabindex="0" data-tip="Densit&eacute; apparente en big bag / conteneur (kg/m&sup3;), pas celle du mat&eacute;riau. Elle d&eacute;termine combien de kilos entrent dans un conteneur.">i</span></label>
                 <div class="input-wrap">
                   <input type="number" id="bulkDensity" value="140" min="1" step="1" oninput="onDensityChange()">
                   <span class="unit-label">kg/m&sup3;</span>
@@ -1095,7 +1162,7 @@
                 <span class="hint">Taux EUR/USD : <input type="number" id="eurUsdRate" value="1.08" min="0.5" max="2" step="0.01" style="width:55px;padding:.15rem .3rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:.75rem;text-align:center" oninput="recalc()"> <span id="eurUsdStatus" style="color:var(--text-dim)">(chargement...)</span></span>
               </div>
               <div class="form-group field-user">
-                <label>Incoterm d'achat</label>
+                <label>Incoterm d'achat<span class="hlp" tabindex="0" data-tip="Terme du contrat d'achat : jusqu'o&ugrave; le fournisseur paie le transport. EXW/FOB = Hubcycle paie l'acheminement ; CIF/DDP = d&eacute;j&agrave; inclus dans le prix d'achat.">i</span></label>
                 <select id="t1Incoterm" onchange="recalc()">
                   <option value="EXW" selected>EXW &mdash; D&eacute;part usine (Hubcycle paye tout T1)</option>
                   <option value="FCA">FCA &mdash; Free Carrier (Hubcycle paye fret)</option>
@@ -1111,7 +1178,7 @@
                 <span class="hint" id="t1IncotermHint">D&eacute;finit ce qui est d&eacute;j&agrave; inclus dans le prix fournisseur</span>
               </div>
               <div class="form-group field-auto-edit">
-                <label>Big bags empilables</label>
+                <label>Big bags empilables<span class="hlp" tabindex="0" data-tip="1 couche (produit l&eacute;ger/instable) ou 2 couches (dense/stable). Change le nombre de big bags par conteneur, donc le co&ucirc;t au kilo.">i</span></label>
                 <select id="bbLayers" onchange="recalc()">
                   <option value="1">1 couche (produit l&eacute;ger / instable)</option>
                   <option value="2">2 couches (produit dense / stable)</option>
@@ -1121,6 +1188,12 @@
             </div>
           </div>
         </div>
+
+        </div><!-- /step-1 -->
+
+        <!-- ═══ STEP 2 : TRANSPORT AMONT ═══ -->
+        <div class="step" id="step-2">
+        <div class="step-intro">&#128666; <b>Comment le produit arrive</b> du fournisseur jusqu'&agrave; l'atelier de transformation. Distance, poids et co&ucirc;t sont estim&eacute;s automatiquement &mdash; ajustables si besoin.</div>
 
         <!-- TRANSPORT 1 -->
         <details class="card" open>
@@ -1195,6 +1268,12 @@
           </div>
         </details>
 
+        </div><!-- /step-2 -->
+
+        <!-- ═══ STEP 3 : TRANSFORMATION ═══ -->
+        <div class="step" id="step-3">
+        <div class="step-intro">&#9881;&#65039; <b>Les &eacute;tapes de transformation</b> (broyage, s&eacute;chage&hellip;). Chaque &eacute;tape a un rendement qui ram&egrave;ne le co&ucirc;t au kilo de produit fini. Laissez vide si aucune transformation.</div>
+
         <!-- MANUFACTURING / PROCESS -->
         <div class="card">
           <div class="card-header">
@@ -1219,7 +1298,7 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label>Rendement</label>
+                    <label>Rendement<span class="hlp" tabindex="0" data-tip="Part du poids conserv&eacute;e apr&egrave;s l'&eacute;tape (%). Ex. s&eacute;chage 70 % = il reste 700 g pour 1 kg. Fait monter le co&ucirc;t au kilo de produit fini.">i</span></label>
                     <div class="input-wrap">
                       <input type="number" class="step-yield" value="100" min="1" max="100" step="1" oninput="recalcProcess()">
                       <span class="unit-label">%</span>
@@ -1280,6 +1359,12 @@
             </div>
           </div>
         </div>
+
+        </div><!-- /step-3 -->
+
+        <!-- ═══ STEP 4 : TRANSPORT AVAL ═══ -->
+        <div class="step" id="step-4">
+        <div class="step-intro">&#128230; <b>L'acheminement apr&egrave;s transformation</b>&nbsp;: atelier &rarr; entrep&ocirc;t Hubcycle, puis entrep&ocirc;t &rarr; client final.</div>
 
         <!-- TRANSPORT 2 -->
         <details class="card" open>
@@ -1363,7 +1448,7 @@
           <div class="card-body">
             <div class="form-grid">
               <div class="form-group">
-                <label>Incoterm vente</label>
+                <label>Incoterm vente<span class="hlp" tabindex="0" data-tip="Terme du contrat de vente : jusqu'o&ugrave; Hubcycle paie le transport vers le client. EXW = le client paie ; DAP/DDP = Hubcycle paie jusque chez lui.">i</span></label>
                 <select id="t3Incoterm" onchange="onRouteChange('t3')">
                   <option value="EXW">EXW &mdash; Client enl&egrave;ve chez nous</option>
                   <option value="FCA">FCA &mdash; Client paye le fret</option>
@@ -1434,6 +1519,12 @@
           </div>
         </details>
 
+        </div><!-- /step-4 -->
+
+        <!-- ═══ STEP 5 : COUTS & MARGE ═══ -->
+        <div class="step" id="step-5">
+        <div class="step-intro">&#129518; <b>Derniers co&ucirc;ts et marge cible.</b> Analyses, stockage, taxes&hellip; Le <b>prix de revient</b> s'affiche &agrave; droite (ou en bas sur mobile) et se met &agrave; jour en direct.</div>
+
         <!-- OTHER COSTS -->
         <div class="card">
           <div class="card-header">
@@ -1478,7 +1569,7 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>Marge brute cible</label>
+                <label>Marge brute cible<span class="hlp" tabindex="0" data-tip="Marge vis&eacute;e sur le prix de vente. Sert de rep&egrave;re dans le simulateur de prix (panneau R&eacute;sultats).">i</span></label>
                 <div class="input-wrap">
                   <input type="number" id="targetMargin" value="35" min="0" max="100" step="1" oninput="recalc()">
                   <span class="unit-label">%</span>
@@ -1488,6 +1579,14 @@
           </div>
         </div>
 
+        </div><!-- /step-5 -->
+
+        <!-- STEP NAVIGATION -->
+        <div class="step-nav">
+          <button class="btn btn-ghost" id="stepPrev" onclick="stepMove(-1)">&larr; Pr&eacute;c&eacute;dent</button>
+          <div class="step-dots" id="stepDots">&Eacute;tape 1 / 5</div>
+          <button class="btn btn-primary" id="stepNext" onclick="stepMove(1)">Suivant &rarr;</button>
+        </div>
       </div>
 
       <!-- ═══ RESULTS COLUMN ═══ -->
@@ -2370,6 +2469,41 @@
   // ═══════════════════════════════════════════════
   let _densitySort = { col: 'name', dir: 'asc' };
 
+  // ═══════════════════════════════════════════════
+  // GUIDED STEP NAVIGATION (5 étapes : Produit → Transport amont →
+  // Transformation → Transport aval → Coûts & marge). Les cartes existantes
+  // sont regroupées en .step ; le panneau Résultats reste visible en continu.
+  // ═══════════════════════════════════════════════
+  let _curStep = 1;
+  const STEP_COUNT = 5;
+  function renderStepper() {
+    document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('step-active', (i + 1) === _curStep));
+    document.querySelectorAll('.step-chip').forEach(c => {
+      const n = +c.dataset.step;
+      c.classList.toggle('current', n === _curStep);
+      c.classList.toggle('done', n < _curStep);
+    });
+    const prev = document.getElementById('stepPrev');
+    const next = document.getElementById('stepNext');
+    const dots = document.getElementById('stepDots');
+    if (prev) prev.style.visibility = _curStep === 1 ? 'hidden' : 'visible';
+    if (next) next.textContent = _curStep === STEP_COUNT ? 'Voir le résultat ↓' : 'Suivant →';
+    if (dots) dots.textContent = 'Étape ' + _curStep + ' / ' + STEP_COUNT;
+  }
+  function stepGo(n) {
+    _curStep = Math.min(STEP_COUNT, Math.max(1, n));
+    renderStepper();
+    document.getElementById('stepper')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function stepMove(d) {
+    if (_curStep === STEP_COUNT && d > 0) {
+      document.querySelector('.results-col')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    stepGo(_curStep + d);
+  }
+  document.addEventListener('DOMContentLoaded', renderStepper);
+
   function switchView(name) {
     const est = document.getElementById('estimatorView');
     const den = document.getElementById('densitiesView');
@@ -2669,8 +2803,8 @@
       const total = data.total_products || 0;
       rebuildProductDataList();
       if (textEl) {
-        const when = generatedAt ? generatedAt.toLocaleString('fr-FR') : '?';
-        textEl.innerHTML = '\u2705 ' + total + ' produits Odoo \u2022 g\u00E9n\u00E9r\u00E9 le ' + when + ' \u2022 app ' + APP_VERSION;
+        const when = generatedAt ? generatedAt.toLocaleDateString('fr-FR') : '?';
+        textEl.innerHTML = '\u2705 <b>' + total.toLocaleString('fr-FR') + '</b> produits \u00E0 jour <span style="color:var(--text-dim)">\u00B7 maj ' + when + '</span>';
       }
       if (statusEl) statusEl.className = 'odoo-status ok';
       return true;
@@ -2828,7 +2962,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Rendement</label>
+          <label>Rendement<span class="hlp" tabindex="0" data-tip="Part du poids conserv&eacute;e apr&egrave;s l'&eacute;tape (%). Ex. s&eacute;chage 70 % = il reste 700 g pour 1 kg. Fait monter le co&ucirc;t au kilo de produit fini.">i</span></label>
           <div class="input-wrap">
             <input type="number" class="step-yield" value="100" min="1" max="100" step="1" oninput="recalcProcess()">
             <span class="unit-label">%</span>
