@@ -1,7 +1,7 @@
 {
   "description": "Tarifs de fret indicatifs charges au runtime par index.html (comme curated.json). Base = cotations reelles Hubcycle (FATTON, EXPEDITORS). Le coefficient de marche fait fluctuer le maritime/aerien dans le temps. EDITER ce fichier puis commit & push -> Render redeploie en ~1 min.",
   "last_updated": "2026-06-19",
-  "fluctuation_note": "Tarifs de fret indicatifs. Le marche fluctue fortement (crise mer Rouge / Suez, prix du gazole, saisonnalite). Verifier une cotation reelle avant engagement.",
+  "fluctuation_note": "Indicative freight rates. The market fluctuates a lot (Red Sea / Suez crisis, diesel prices, seasonality). Check a real quote before committing.",
 
   "market_index": {
     "comment": "coefficient multiplie les tarifs maritimes ET aeriens. 1.0 = tarifs tels que cotes par les transitaires. Pour suivre la hausse du marche, monter ce nombre (ex: current_value / baseline_value = 3969/3433 = 1.16). Source publique gratuite, publiee chaque semaine.",
