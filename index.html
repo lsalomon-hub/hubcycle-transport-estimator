@@ -1186,10 +1186,10 @@
                 <span class="hint" id="bbHint">Auto: 1 layer if density &lt; 300 kg/m&sup3;</span>
               </div>
               <div class="form-group field-auto-edit">
-                <label>Sea container<span class="hlp" tabindex="0" data-tip="Container size for sea freight. 40' &asymp; 26 big bags (max 26 t); 20' &asymp; 14 big bags (max 21 t). Changes the shipped weight, the capacity and the freight rate used for sea legs.">i</span></label>
+                <label>Sea container<span class="hlp" tabindex="0" data-tip="Container size for sea freight. Typical payload by product type &mdash; Powder: ~14 t (40') / ~7 t (20'). Bulky / light product: ~7 t / ~4 t. Liquid: ~24 t / ~20 t. The exact weight is computed from the product's density.">i</span></label>
                 <select id="seaContainer" onchange="onContainerChange()">
-                  <option value="40" selected>40' container (~26 big bags, max 26 t)</option>
-                  <option value="20">20' container (~14 big bags, max 21 t)</option>
+                  <option value="40" selected>40' container (~26 big bags)</option>
+                  <option value="20">20' container (~14 big bags)</option>
                 </select>
                 <span class="hint">Used for sea legs (T1/T2/T3 shipped by sea)</span>
               </div>
@@ -1695,6 +1695,16 @@
             </div>
             <div class="sep"></div>
             <div class="q-row">
+              <span class="q-label">Total transport /kg</span>
+              <span class="q-col"></span>
+              <span class="q-value c-blue" id="qTotalTransport">&mdash;</span>
+            </div>
+            <div class="q-row">
+              <span class="q-label">Other costs /kg</span>
+              <span class="q-col"></span>
+              <span class="q-value" id="qOtherCosts">&mdash;</span>
+            </div>
+            <div class="q-row">
               <span class="q-label" style="font-weight:600;color:var(--text)">Cost price (R)</span>
               <span class="q-col">Col. R</span>
               <span class="q-value c-green" id="qR">&mdash;</span>
@@ -1714,8 +1724,8 @@
             <div style="margin-bottom:.6rem">
               <span style="color:var(--blue-400);font-weight:700">Sea</span><br>
               &bull; 40' container: 26 big bags (~1 m&sup3;/bb)<br>
-              &bull; Max load: 26,000 kg<br>
-              &bull; Weight = min(26 &times; density, 26T)<br>
+              &bull; Typical load: powder ~14 t, bulky/light ~7 t, liquid ~24 t (40')<br>
+              &bull; About half those weights in a 20'; exact weight from the product's density<br>
               &bull; Cost: real Hubcycle quotes (FATTON, EXPEDITORS)<br>
               &bull; &times; market coefficient (volatile freight &mdash; <code>freight.json</code>)<br>
               &bull; If route unknown: estimated 0.38 &euro;/km sea<br>
@@ -3465,6 +3475,9 @@
     document.getElementById('qT1').textContent = fmt(t1perkg) + ' \u20AC';
     document.getElementById('qT2').textContent = fmt(t2perkg) + ' \u20AC';
     document.getElementById('qT3').textContent = fmt(t3perkg) + ' \u20AC';
+    // Breakdown so the card visibly reads R = transport + other costs
+    document.getElementById('qTotalTransport').textContent = fmt(totalEffectiveTransport) + ' \u20AC';
+    document.getElementById('qOtherCosts').textContent = fmt(Math.max(0, R - totalEffectiveTransport)) + ' \u20AC';
     document.getElementById('qR').textContent = fmt(R) + ' \u20AC';
   }
 
