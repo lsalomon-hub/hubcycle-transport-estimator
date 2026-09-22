@@ -1185,6 +1185,14 @@
                 </select>
                 <span class="hint" id="bbHint">Auto: 1 layer if density &lt; 300 kg/m&sup3;</span>
               </div>
+              <div class="form-group field-auto-edit">
+                <label>Sea container<span class="hlp" tabindex="0" data-tip="Container size for sea freight. 40' &asymp; 26 big bags (max 26 t); 20' &asymp; 14 big bags (max 21 t). Changes the shipped weight, the capacity and the freight rate used for sea legs.">i</span></label>
+                <select id="seaContainer" onchange="onContainerChange()">
+                  <option value="40" selected>40' container (~26 big bags, max 26 t)</option>
+                  <option value="20">20' container (~14 big bags, max 21 t)</option>
+                </select>
+                <span class="hint">Used for sea legs (T1/T2/T3 shipped by sea)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -2026,8 +2034,9 @@
       }
     } else if (mode === 'Sea') {
       const o = norm(origin), d = norm(dest);
-      const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
-                || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
+      const cont = getSeaContainer(), alt = cont === '40' ? '20' : '40';
+      const rate = SEA_RATES[o+'|'+d+'|'+cont] || SEA_RATES[origin+'|'+dest+'|'+cont]
+                || SEA_RATES[o+'|'+d+'|'+alt] || SEA_RATES[origin+'|'+dest+'|'+alt];
       if (rate) {
         cost = Math.round(rate.cost * mult * MARKET_COEF);
         transit = rate.transit;
@@ -2076,7 +2085,7 @@
   // ═══════════════════════════════════════════════
   const SCENARIO_FIELDS = [
     'productName','productState','bulkDensity','rawPrice','rawCurrency',
-    't1Incoterm','t1Origin','t1Dest','t1Mode','t1Volume','t1Distance','t1Cost','t1Transit','t1Weight','bbLayers',
+    't1Incoterm','t1Origin','t1Dest','t1Mode','t1Volume','t1Distance','t1Cost','t1Transit','t1Weight','bbLayers','seaContainer',
     't2Origin','t2Dest','t2Mode','t2Distance','t2Cost','t2Transit','t2Weight',
     't3Incoterm','t3Dest','t3Client','t3Mode','t3Distance','t3Cost','t3Transit','t3Weight',
     'outputProduct','processedDensity','processedState','marketPrice',
@@ -3196,9 +3205,25 @@
   const BB_FLOOR = { "40": 13, "20": 7, "Truck": 11 };
   const CONTAINER_MAX = { "40": 26000, "20": 21000, "Truck": 24000 };
 
+  // Selected sea container size ('40' or '20'). Drives big-bag count, weight cap,
+  // capacity display and which SEA_RATES entry is used.
+  function getSeaContainer() {
+    const el = document.getElementById('seaContainer');
+    return el && el.value === '20' ? '20' : '40';
+  }
+
+  // Re-estimate sea legs (weight + freight) when the container size changes.
+  function onContainerChange() {
+    ['t1','t2','t3'].forEach(p => {
+      const modeEl = document.getElementById(p + 'Mode');
+      if (modeEl && modeEl.value === 'Sea') onRouteChange(p);
+    });
+    recalc();
+  }
+
   function getBigBags(mode) {
     const layers = parseInt(document.getElementById('bbLayers').value) || 1;
-    const type = (mode === 'Sea') ? '40' : 'Truck';
+    const type = (mode === 'Sea') ? getSeaContainer() : 'Truck';
     return BB_FLOOR[type] * layers;
   }
 
@@ -3218,7 +3243,7 @@
 
   function estimateWeight(density, mode) {
     if (density <= 0) return 0;
-    const type = (mode === 'Sea') ? '40' : 'Truck';
+    const type = (mode === 'Sea') ? getSeaContainer() : 'Truck';
     const maxKg = CONTAINER_MAX[type] || 24000;
     if (mode === 'Sea') {
       const bb = getBigBags(mode);
@@ -3294,8 +3319,9 @@
       }
     } else if (mode === 'Sea') {
       const o = norm(origin), d = norm(dest);
-      const rate = SEA_RATES[o+'|'+d+'|40'] || SEA_RATES[o+'|'+d+'|20']
-                || SEA_RATES[origin+'|'+dest+'|40'] || SEA_RATES[origin+'|'+dest+'|20'];
+      const cont = getSeaContainer(), alt = cont === '40' ? '20' : '40';
+      const rate = SEA_RATES[o+'|'+d+'|'+cont] || SEA_RATES[origin+'|'+dest+'|'+cont]
+                || SEA_RATES[o+'|'+d+'|'+alt] || SEA_RATES[origin+'|'+dest+'|'+alt];
       if (rate) {
         costEl.value = Math.round(rate.cost * mult * MARKET_COEF);
         transitEl.value = rate.transit;
@@ -3367,11 +3393,12 @@
     const rawDensity = v('bulkDensity');
     const layers = parseInt(document.getElementById('bbLayers').value) || 1;
     if (rawDensity > 0) {
-      const bbSea = BB_FLOOR["40"] * layers;
-      const totalKg = bbSea * rawDensity;
+      const cont = getSeaContainer();
+      const bbSea = BB_FLOOR[cont] * layers;
+      const totalKg = Math.min(bbSea * rawDensity, CONTAINER_MAX[cont]);
       const layerTxt = layers === 1 ? '1 layer' : '2 layers';
       document.getElementById('t1CapInfo').textContent =
-        `40' container \u2014 ${bbSea} big bags (${layerTxt}) \u00D7 ${rawDensity} kg/bb = ${totalKg.toLocaleString('fr-FR')} kg`;
+        `${cont}' container \u2014 ${bbSea} big bags (${layerTxt}) \u00D7 ${rawDensity} kg/bb = ${totalKg.toLocaleString('fr-FR')} kg`;
     }
     // T2 capacity uses processed density + stacking layers
     const procDensity = v('processedDensity');
