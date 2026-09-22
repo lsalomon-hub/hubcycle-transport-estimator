@@ -2485,7 +2485,9 @@
     const next = document.getElementById('stepNext');
     const dots = document.getElementById('stepDots');
     if (prev) prev.style.visibility = _curStep === 1 ? 'hidden' : 'visible';
-    if (next) next.textContent = _curStep === STEP_COUNT ? 'See the result ↓' : 'Next →';
+    if (next) next.textContent = _curStep === STEP_COUNT
+      ? (window.matchMedia('(max-width: 1200px)').matches ? 'See the result ↓' : 'See the result →')
+      : 'Next →';
     if (dots) dots.textContent = 'Step ' + _curStep + ' / ' + STEP_COUNT;
   }
   function stepGo(n) {
@@ -2495,12 +2497,25 @@
   }
   function stepMove(d) {
     if (_curStep === STEP_COUNT && d > 0) {
-      document.querySelector('.results-col')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const res = document.querySelector('.result-card');
+      if (res) {
+        if (window.matchMedia('(max-width: 1200px)').matches) {
+          // Single column: the results are below → scroll down to them.
+          res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // Two columns: the results are already visible on the right → flash, don't scroll.
+          res.style.transition = 'box-shadow .3s ease';
+          res.style.boxShadow = '0 0 0 3px var(--accent)';
+          setTimeout(() => { res.style.boxShadow = ''; }, 1000);
+        }
+      }
       return;
     }
     stepGo(_curStep + d);
   }
   document.addEventListener('DOMContentLoaded', renderStepper);
+  // Keep the last-step arrow correct (↓ when results are below, → when beside) after a resize.
+  window.addEventListener('resize', () => { try { renderStepper(); } catch (e) {} });
 
   function switchView(name) {
     const est = document.getElementById('estimatorView');
