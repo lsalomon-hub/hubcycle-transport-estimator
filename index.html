@@ -2499,15 +2499,13 @@
     if (_curStep === STEP_COUNT && d > 0) {
       const res = document.querySelector('.result-card');
       if (res) {
-        if (window.matchMedia('(max-width: 1200px)').matches) {
-          // Single column: the results are below → scroll down to them.
-          res.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-          // Two columns: the results are already visible on the right → flash, don't scroll.
-          res.style.transition = 'box-shadow .3s ease';
-          res.style.boxShadow = '0 0 0 3px var(--accent)';
-          setTimeout(() => { res.style.boxShadow = ''; }, 1000);
-        }
+        // block:'nearest' brings the result into view with the minimum scroll (up OR
+        // down as needed) and does nothing if it is already fully visible — so it
+        // never jumps to the top of the page.
+        res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        res.style.transition = 'box-shadow .3s ease';
+        res.style.boxShadow = '0 0 0 3px var(--accent)';
+        setTimeout(() => { res.style.boxShadow = ''; }, 1000);
       }
       return;
     }
