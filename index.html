@@ -1658,31 +1658,7 @@
               </div>
             </div>
 
-            <!-- ── PRIX DE VENTE (SIMULATEUR) ── -->
-            <div class="section-box section-sell">
-              <div class="stitle">Sale price</div>
-
-              <!-- ── SIMULATEUR PRIX VENTE LIVE ── -->
-              <div style="margin-top:.75rem;padding:.75rem;background:rgba(255,104,77,.06);border:1px solid rgba(255,104,77,.25);border-radius:var(--radius-sm)">
-                <div style="font-size:.72rem;font-weight:700;color:var(--green-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Sale price simulator</div>
-                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
-                  <input type="number" id="simSellPrice" step="0.10" min="0" value="0" oninput="recalcSimulator()" onchange="recalcSimulator()" style="flex:0 0 100px;padding:.4rem .5rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.95rem;font-weight:700">
-                  <span style="color:var(--text-muted);font-size:.8rem">&euro;/kg</span>
-                  <input type="range" id="simSellSlider" min="0" max="50" step="0.05" value="0" oninput="onSimSliderChange(this.value)" style="flex:1">
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.78rem">
-                  <div style="text-align:center;padding:.4rem;background:var(--bg-input);border-radius:4px">
-                    <div style="color:var(--text-dim);font-size:.65rem;text-transform:uppercase">Gross margin</div>
-                    <div id="simMarginAbs" style="font-weight:800;font-size:1.05rem;color:var(--text)">&mdash;</div>
-                  </div>
-                  <div style="text-align:center;padding:.4rem;background:var(--bg-input);border-radius:4px">
-                    <div style="color:var(--text-dim);font-size:.65rem;text-transform:uppercase">Margin %</div>
-                    <div id="simMarginPct" style="font-weight:800;font-size:1.05rem">&mdash;</div>
-                  </div>
-                </div>
-                <div style="margin-top:.4rem;font-size:.68rem;color:var(--text-dim);text-align:center" id="simHint">Move the slider to adjust; the cost price stays fixed</div>
-              </div>
-            </div>
+            <!-- Sale price simulator removed (no data basis — was manual what-if only). -->
 
           </div>
         </div>
@@ -3366,72 +3342,7 @@
     return (n * 100).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
   }
 
-  // ═══════════════════════════════════════════════
-  // SELL PRICE SIMULATOR — interactive what-if for margin tuning
-  // Cost price stays fixed (computed in recalc); user moves the slider /
-  // input to find the sell price that hits their margin target.
-  // ═══════════════════════════════════════════════
-  // _simUserPrice = price the user has set explicitly (sticky across recalcs).
-  // null until user touches the simulator, then we keep their value.
-  let _simUserPrice = null;
-  let _lastCost = 0;
-  let _lastMarket = 0;
-
-  function onSimSliderChange(value) {
-    _simUserPrice = parseFloat(value) || 0;
-    document.getElementById('simSellPrice').value = _simUserPrice;
-    recalcSimulator();
-  }
-
-  function recalcSimulator() {
-    const inp = document.getElementById('simSellPrice');
-    if (!inp) return;
-    // Read the user's chosen sell price; if they typed in the input, sync slider
-    const userVal = parseFloat(inp.value) || 0;
-    if (userVal !== _simUserPrice) _simUserPrice = userVal;
-    const cost = _lastCost;
-    const market = _lastMarket;
-    const sell = _simUserPrice;
-
-    const marginAbs = sell - cost;
-    const marginPct = sell > 0 ? marginAbs / sell : 0;
-
-    document.getElementById('simMarginAbs').textContent = (marginAbs >= 0 ? '+' : '') + fmt(marginAbs, 3) + ' €';
-    document.getElementById('simMarginPct').textContent = fmtPct(marginPct);
-
-    // Color
-    const m = document.getElementById('simMarginPct');
-    m.style.color = marginPct >= 0.30 ? 'var(--green-400)'
-                  : marginPct >= 0.15 ? 'var(--amber-400)'
-                  : marginPct >= 0    ? '#fbbf24'
-                  : 'var(--red-400)';
-
-    // Hint
-    let hint = '';
-    if (sell <= cost) hint = '⚠ Below cost price — loss';
-    else if (marginPct < 0.10) hint = 'Low margin (< 10%)';
-    else if (marginPct < 0.20) hint = 'OK margin (10–20%)';
-    else if (marginPct < 0.35) hint = 'Comfortable margin (20–35%)';
-    else hint = 'High margin (> 35%)';
-    document.getElementById('simHint').textContent = hint;
-  }
-
-  function syncSimulatorRange(cost, market) {
-    const slider = document.getElementById('simSellSlider');
-    const inp = document.getElementById('simSellPrice');
-    if (!slider || !inp) return;
-    // Slider range: 0 to max(cost*2, market*1.5, 5)
-    const maxRange = Math.max(cost * 2, market * 1.5, 5);
-    slider.max = Math.ceil(maxRange);
-    slider.step = maxRange > 50 ? 0.5 : 0.05;
-    // If user hasn't picked a value yet, default to market price (or cost+30%)
-    if (_simUserPrice === null || _simUserPrice === 0) {
-      const initial = market > 0 ? market : (cost > 0 ? cost * 1.3 : 0);
-      _simUserPrice = parseFloat(initial.toFixed(2));
-      inp.value = _simUserPrice;
-    }
-    slider.value = _simUserPrice;
-  }
+  // (Sale price simulator removed — it had no data basis, only manual what-if arithmetic.)
 
   function recalc() {
     const t1w = v('t1Weight'), t2w = v('t2Weight'), t3w = v('t3Weight');
@@ -3523,11 +3434,6 @@
 
     // Cost price
     document.getElementById('rCostPrice').textContent = fmt(R, 3);
-    // Cache for the simulator (avoids fragile parsing of localized fmt())
-    _lastCost = R;
-    _lastMarket = marketPrice;
-    syncSimulatorRange(R, marketPrice);
-    recalcSimulator();
 
     document.getElementById('qT1').textContent = fmt(t1perkg) + ' \u20AC';
     document.getElementById('qT2').textContent = fmt(t2perkg) + ' \u20AC';
