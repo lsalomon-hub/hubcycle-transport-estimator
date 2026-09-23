@@ -371,6 +371,16 @@
     }
     .hlp:hover::after, .hlp:focus::after { opacity: 1; }
 
+    /* ── TRANSPORT LEG ON/OFF ── */
+    .leg-toggle {
+      display: inline-flex; align-items: center; gap: .35rem;
+      margin-left: auto; font-size: .72rem; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; white-space: nowrap;
+    }
+    .leg-toggle input { margin: 0; cursor: pointer; }
+    .card.leg-off .card-body { opacity: .4; pointer-events: none; filter: grayscale(.4); }
+    .card.leg-off > summary h3 { text-decoration: line-through; color: var(--text-dim); }
+
     /* ── FIELD TYPE COLOR CODING ── */
     /* 1. User input (to fill) — left green border */
     .field-user input, .field-user select {
@@ -1208,7 +1218,10 @@
           <summary class="card-header">
             <div class="dot" style="background:var(--blue-500)"></div>
             <h3>Transport 1 &mdash; Supplier &rarr; Plant / Warehouse</h3>
-            <span class="badge c-blue" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);margin-left:auto" id="t1Badge">0,000 &euro;/kg</span>
+            <label class="leg-toggle" onclick="event.stopPropagation()" title="Uncheck to skip this transport leg (e.g. direct delivery)">
+              <input type="checkbox" id="t1Enabled" checked onchange="onLegToggle('t1')"> Included
+            </label>
+            <span class="badge c-blue" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25)" id="t1Badge">0,000 &euro;/kg</span>
           </summary>
           <div class="card-body">
             <div class="form-grid">
@@ -1379,7 +1392,10 @@
           <summary class="card-header">
             <div class="dot" style="background:var(--amber-500)"></div>
             <h3>Transport 2 &mdash; Plant &rarr; Hubcycle warehouse</h3>
-            <span class="badge c-amber" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);margin-left:auto" id="t2Badge">0,000 &euro;/kg</span>
+            <label class="leg-toggle" onclick="event.stopPropagation()" title="Uncheck to skip this transport leg (e.g. direct delivery)">
+              <input type="checkbox" id="t2Enabled" checked onchange="onLegToggle('t2')"> Included
+            </label>
+            <span class="badge c-amber" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25)" id="t2Badge">0,000 &euro;/kg</span>
           </summary>
           <div class="card-body">
             <div class="form-grid">
@@ -1451,7 +1467,10 @@
           <summary class="card-header">
             <div class="dot" style="background:var(--pink-400)"></div>
             <h3>Transport 3 &mdash; Warehouse &rarr; Customer</h3>
-            <span class="badge c-pink" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.25);margin-left:auto" id="t3Badge">0,000 &euro;/kg</span>
+            <label class="leg-toggle" onclick="event.stopPropagation()" title="Uncheck to skip this transport leg (e.g. direct delivery)">
+              <input type="checkbox" id="t3Enabled" checked onchange="onLegToggle('t3')"> Included
+            </label>
+            <span class="badge c-pink" style="background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.25)" id="t3Badge">0,000 &euro;/kg</span>
           </summary>
           <div class="card-body">
             <div class="form-grid">
@@ -2095,9 +2114,9 @@
   // ═══════════════════════════════════════════════
   const SCENARIO_FIELDS = [
     'productName','productState','bulkDensity','rawPrice','rawCurrency',
-    't1Incoterm','t1Origin','t1Dest','t1Mode','t1Volume','t1Distance','t1Cost','t1Transit','t1Weight','bbLayers','seaContainer',
-    't2Origin','t2Dest','t2Mode','t2Distance','t2Cost','t2Transit','t2Weight',
-    't3Incoterm','t3Dest','t3Client','t3Mode','t3Distance','t3Cost','t3Transit','t3Weight',
+    't1Enabled','t1Incoterm','t1Origin','t1Dest','t1Mode','t1Volume','t1Distance','t1Cost','t1Transit','t1Weight','bbLayers','seaContainer',
+    't2Enabled','t2Origin','t2Dest','t2Mode','t2Distance','t2Cost','t2Transit','t2Weight',
+    't3Enabled','t3Incoterm','t3Dest','t3Client','t3Mode','t3Distance','t3Cost','t3Transit','t3Weight',
     'outputProduct','processedDensity','processedState','marketPrice',
     'analyses','storage','importTax','exportTax','insurance','targetMargin',
     'eurUsdRate',
@@ -2107,7 +2126,7 @@
     const data = {};
     SCENARIO_FIELDS.forEach(id => {
       const el = document.getElementById(id);
-      if (el) data[id] = el.value;
+      if (el) data[id] = (el.type === 'checkbox') ? el.checked : el.value;
     });
     // Capture process steps
     data._steps = Array.from(document.querySelectorAll('.process-step')).map(s => ({
@@ -2124,7 +2143,15 @@
     if (!data) return;
     SCENARIO_FIELDS.forEach(id => {
       const el = document.getElementById(id);
-      if (el && data[id] !== undefined) el.value = data[id];
+      if (el && data[id] !== undefined) {
+        if (el.type === 'checkbox') el.checked = !!data[id];
+        else el.value = data[id];
+      }
+    });
+    // Sync the greyed-out state of disabled transport legs
+    ['t1','t2','t3'].forEach(p => {
+      const cb = document.getElementById(p + 'Enabled');
+      if (cb) cb.closest('.card')?.classList.toggle('leg-off', !cb.checked);
     });
     // Restore process steps: clear then add each
     if (Array.isArray(data._steps) && data._steps.length > 0) {
@@ -3235,6 +3262,17 @@
     return el && el.value === '20' ? '20' : '40';
   }
 
+  // Enable/disable a whole transport leg (T1/T2/T3). When off, the leg is excluded
+  // from the cost (per-kg forced to 0) and its card is greyed out — e.g. for a
+  // direct supplier -> processor delivery where one leg does not exist.
+  function onLegToggle(prefix) {
+    const cb = document.getElementById(prefix + 'Enabled');
+    if (!cb) return;
+    const card = cb.closest('.card');
+    if (card) card.classList.toggle('leg-off', !cb.checked);
+    recalc();
+  }
+
   // Re-estimate sea legs (weight + freight) when the container size changes.
   function onContainerChange() {
     ['t1','t2','t3'].forEach(p => {
@@ -3400,17 +3438,20 @@
     const t1Total = v('t1Cost') + getExtraLegsCost('t1');
     const t2Total = v('t2Cost') + getExtraLegsCost('t2');
     const t3Total = v('t3Cost') + getExtraLegsCost('t3');
-    const t1perkg = t1w > 0 ? t1Total / t1w : 0;
-    const t2perkg = t2w > 0 ? t2Total / t2w : 0;
-    const t3perkg = t3w > 0 ? t3Total / t3w : 0;
+    const t1On = document.getElementById('t1Enabled')?.checked !== false;
+    const t2On = document.getElementById('t2Enabled')?.checked !== false;
+    const t3On = document.getElementById('t3Enabled')?.checked !== false;
+    const t1perkg = (t1On && t1w > 0) ? t1Total / t1w : 0;
+    const t2perkg = (t2On && t2w > 0) ? t2Total / t2w : 0;
+    const t3perkg = (t3On && t3w > 0) ? t3Total / t3w : 0;
     const totalTransport = t1perkg + t2perkg + t3perkg;
 
     document.getElementById('t1PerKg').textContent = fmt(t1perkg) + ' \u20AC';
     document.getElementById('t2PerKg').textContent = fmt(t2perkg) + ' \u20AC';
     document.getElementById('t3PerKg').textContent = fmt(t3perkg) + ' \u20AC';
-    document.getElementById('t1Badge').textContent = fmt(t1perkg) + ' \u20AC/kg';
-    document.getElementById('t2Badge').textContent = fmt(t2perkg) + ' \u20AC/kg';
-    document.getElementById('t3Badge').textContent = fmt(t3perkg) + ' \u20AC/kg';
+    document.getElementById('t1Badge').textContent = t1On ? fmt(t1perkg) + ' \u20AC/kg' : 'skipped';
+    document.getElementById('t2Badge').textContent = t2On ? fmt(t2perkg) + ' \u20AC/kg' : 'skipped';
+    document.getElementById('t3Badge').textContent = t3On ? fmt(t3perkg) + ' \u20AC/kg' : 'skipped';
 
     // T1 capacity uses raw/bulk density + stacking layers
     const rawDensity = v('bulkDensity');
@@ -3468,9 +3509,9 @@
 
     // Transport section — show effective (0 if excluded by Incoterm)
     const totalEffectiveTransport = t1Effective + t2perkg + t3Effective;
-    document.getElementById('rT1').textContent = fmt(t1Effective) + ' \u20AC' + (t1HubPays ? '' : ' (excl.)');
-    document.getElementById('rT2').textContent = fmt(t2perkg) + ' \u20AC';
-    document.getElementById('rT3').textContent = fmt(t3Effective) + ' \u20AC' + (t3HubPays ? '' : ' (excl.)');
+    document.getElementById('rT1').textContent = t1On ? (fmt(t1Effective) + ' \u20AC' + (t1HubPays ? '' : ' (excl.)')) : '\u2014 (skipped)';
+    document.getElementById('rT2').textContent = t2On ? (fmt(t2perkg) + ' \u20AC') : '\u2014 (skipped)';
+    document.getElementById('rT3').textContent = t3On ? (fmt(t3Effective) + ' \u20AC' + (t3HubPays ? '' : ' (excl.)')) : '\u2014 (skipped)';
     document.getElementById('rTotalTransport').textContent = fmt(totalEffectiveTransport) + ' \u20AC';
 
     // Other costs section
